@@ -1,4 +1,4 @@
-import { FirecrawlAppV1 as FirecrawlApp } from '@mendable/firecrawl-js'
+import FirecrawlApp from '@mendable/firecrawl-js'
 import type { Listing } from '../lib/types'
 
 const AREA_SLUGS: Record<string, string> = {
@@ -18,6 +18,8 @@ const TYPE_SLUGS: Record<string, string> = {
   house:     'house-rentals',
   annex:     'room-annex-rentals',
 }
+
+const MAX_PAGES = 5 // cap at 5 pages (~125 ads) per category/area combo
 
 export interface ScrapeConfig {
   areas: string[]
@@ -68,9 +70,12 @@ function extractAdsList(data: Record<string, unknown>): IkmanAd[] {
   // Log top-level keys to help debug any future structure changes
   console.log('  initialData keys:', Object.keys(data).join(', '))
 
+  const serp    = data.serp    as Record<string, unknown> | undefined
   const listing = data.listing as Record<string, unknown> | undefined
 
   const ads =
+    (serp?.ads    as IkmanAd[] | undefined) ??
+    (serp?.list   as IkmanAd[] | undefined) ??
     (listing?.list as IkmanAd[] | undefined) ??
     (listing?.ads  as IkmanAd[] | undefined) ??
     (data.ads      as IkmanAd[] | undefined) ??
@@ -144,7 +149,11 @@ async function scrapeDetailPage(
   url: string,
 ): Promise<{ description: string | null; contact: string | null; photos: string[] }> {
   try {
-    const res = await app.scrapeUrl(url, { formats: ['rawHtml'] })
+    const res = await app.scrapeUrl(url, {
+      formats: ['rawHtml'],
+      onlyMainContent: false,
+      waitFor: 2000,
+    })
     if (!res.success || !res.rawHtml) return { description: null, contact: null, photos: [] }
 
     const data = extractInitialData(res.rawHtml)
@@ -177,52 +186,68 @@ export async function runScraper(config: ScrapeConfig): Promise<Partial<Listing>
 
     for (const type of config.listing_types) {
       const categorySlug = TYPE_SLUGS[type] ?? 'apartment-rentals'
-      const params       = new URLSearchParams({
-        'money.price.maximum': String(config.max_price),
-        sort:  'date',
-        order: 'desc',
-      })
-      const url = `https://ikman.lk/en/ads/${areaSlug}/${categorySlug}?${params}`
-      console.log(`Scraping: ${url}`)
 
-      try {
-        const res = await app.scrapeUrl(url, { formats: ['rawHtml'] })
+      for (let page = 1; page <= MAX_PAGES; page++) {
+        const params = new URLSearchParams({
+          'money.price.maximum': String(config.max_price),
+          sort:  'date',
+          order: 'desc',
+          page:  String(page),
+        })
+        const url = `https://ikman.lk/en/ads/${areaSlug}/${categorySlug}?${params}`
+        console.log(`Scraping (page ${page}): ${url}`)
 
-        if (!res.success || !res.rawHtml) {
-          console.log(`  Firecrawl failed or returned no HTML`)
-          continue
-        }
+        try {
+          const res = await app.scrapeUrl(url, {
+            formats: ['rawHtml'],
+            onlyMainContent: false,
+            waitFor: 2000,
+          })
 
-        const data = extractInitialData(res.rawHtml)
-        if (!data) {
-          console.log(`  window.initialData not found in HTML`)
-          continue
-        }
-
-        const ads    = extractAdsList(data)
-        const parsed: Partial<Listing>[] = []
-
-        for (const ad of ads) {
-          const listing = parseAd(ad, area, categorySlug)
-          if (!listing) continue
-
-          if (listing.price && listing.price > config.max_price) continue
-          if (listing.bedrooms != null) {
-            if (listing.bedrooms < config.min_bedrooms) continue
-            if (listing.bedrooms > config.max_bedrooms) continue
+          if (!res.success || !res.rawHtml) {
+            console.log(`  Firecrawl failed or returned no HTML`)
+            break
           }
 
-          parsed.push(listing)
+          const data = extractInitialData(res.rawHtml)
+          if (!data) {
+            console.log(`  window.initialData not found in HTML`)
+            break
+          }
+
+          const ads = extractAdsList(data)
+
+          // No more ads = no more pages
+          if (ads.length === 0) {
+            console.log(`  No ads on page ${page}, stopping pagination`)
+            break
+          }
+
+          const parsed: Partial<Listing>[] = []
+
+          for (const ad of ads) {
+            const listing = parseAd(ad, area, categorySlug)
+            if (!listing) continue
+
+            if (listing.price && listing.price > config.max_price) continue
+            if (listing.bedrooms != null) {
+              if (listing.bedrooms < config.min_bedrooms) continue
+              if (listing.bedrooms > config.max_bedrooms) continue
+            }
+
+            parsed.push(listing)
+          }
+
+          console.log(`  Kept ${parsed.length} of ${ads.length} listings after filtering`)
+          allListings.push(...parsed)
+        } catch (err) {
+          console.error(`  Error: ${(err as Error).message}`)
+          break
         }
 
-        console.log(`  Kept ${parsed.length} of ${ads.length} listings after filtering`)
-        allListings.push(...parsed)
-      } catch (err) {
-        console.error(`  Error: ${(err as Error).message}`)
+        // Polite delay between pages
+        await new Promise((r) => setTimeout(r, 1000))
       }
-
-      // Polite delay between pages
-      await new Promise((r) => setTimeout(r, 1000))
     }
   }
 
