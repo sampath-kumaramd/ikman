@@ -8,7 +8,7 @@
 
 import { createClient } from '@supabase/supabase-js'
 import FirecrawlApp from '@mendable/firecrawl-js'
-import { runScraper, enrichListingsWithDetails } from './scraper'
+import { runScraper, enrichListingsWithDetails, sanitizeListingForDb } from './scraper'
 import { sendWhatsApp, buildListingMessage } from './whatsapp'
 import { getSettings, upsertListings, getExistingIkmanIds, createNotification } from '../lib/db'
 import type { Listing } from '../lib/types'
@@ -70,7 +70,7 @@ async function main() {
 
   const saved = await upsertListings(
     db,
-    newListings as Omit<Listing, 'id' | 'created_at'>[],
+    newListings.map((l) => sanitizeListingForDb(l)) as Omit<Listing, 'id' | 'created_at'>[],
   )
 
   // Twilio credentials

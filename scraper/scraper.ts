@@ -20,7 +20,19 @@ const TYPE_SLUGS: Record<string, string> = {
 }
 
 const MAX_PAGES = 5 // cap at 5 pages (~125 ads) per category/area combo
-const DEFAULT_DETAIL_CONCURRENCY = 8
+const DEFAULT_DETAIL_CONCURRENCY = 3
+const MIN_SCRAPE_INTERVAL_MS = 700 // stay under Firecrawl ~100 req/min
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+let lastScrapeAt = 0
+
+async function throttleScrape(): Promise<void> {
+  const now = Date.now()
+  const wait = lastScrapeAt + MIN_SCRAPE_INTERVAL_MS - now
+  if (wait > 0) await sleep(wait)
+  lastScrapeAt = Date.now()
+}
 
 async function runWithConcurrency<T>(
   items: T[],
@@ -66,6 +78,7 @@ interface IkmanAd {
   created_at?:  string
   posted_at?:   string
   postedDate?:  string
+  adDate?:      string
   timeStamp?:   string
   lastBumpUpDate?: string
   contact?:     { chat_phone_number?: string; phone?: string }
@@ -107,6 +120,59 @@ function parsePrice(value: string | number | undefined | null): number | null {
   if (!value) return null
   const m = String(value).replace(/,/g, '').match(/(\d+)/)
   return m ? parseInt(m[1], 10) : null
+}
+
+/** ikman SERP uses relative labels ("just now", "5 hours"); Postgres needs ISO or null. */
+export function parsePostedAt(...candidates: (string | undefined | null)[]): string | null {
+  for (const raw of candidates) {
+    if (raw == null || raw === '') continue
+    const s = String(raw).trim()
+    if (!s) continue
+    if (/^bump_up$/i.test(s)) continue
+    if (/^just now$/i.test(s)) continue
+    if (/^\d+\s*(second|minute|hour|day|week|month|year)s?\b/i.test(s)) continue
+
+    const d = new Date(s)
+    if (!isNaN(d.getTime()) && d.getFullYear() > 2000) return d.toISOString()
+  }
+  return null
+}
+
+export function sanitizeListingForDb(listing: Partial<Listing>): Partial<Listing> {
+  return {
+    ...listing,
+    posted_at: parsePostedAt(listing.posted_at ?? undefined),
+  }
+}
+
+async function scrapeRawHtml(app: FirecrawlApp, url: string): Promise<string | null> {
+  const maxAttempts = 5
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      await throttleScrape()
+      const res = await app.scrape(url, {
+        formats: ['rawHtml'],
+        onlyMainContent: false,
+        waitFor: 2000,
+      })
+      return res.rawHtml ?? null
+    } catch (err) {
+      const msg = (err as Error).message
+      const isRateLimit = /rate limit/i.test(msg)
+      const retrySec = msg.match(/retry after (\d+)s/i)?.[1]
+      if (isRateLimit && attempt < maxAttempts) {
+        const waitMs = retrySec ? (parseInt(retrySec, 10) + 1) * 1000 : 5000 * attempt
+        console.log(
+          `  Rate limited, waiting ${Math.round(waitMs / 1000)}s (attempt ${attempt}/${maxAttempts})...`,
+        )
+        await sleep(waitMs)
+        lastScrapeAt = 0
+        continue
+      }
+      throw err
+    }
+  }
+  return null
 }
 
 function buildSerpPhotos(ad: IkmanAd): string[] {
@@ -173,7 +239,7 @@ function extractAdsList(data: Record<string, unknown>): IkmanAd[] {
   const serpAdsData = unwrapSuccessData<{ ads?: IkmanAd[] }>(serp?.ads)
 
   let source = 'none'
-  let ads: unknown =
+  const ads: unknown =
     serpAdsData?.ads ??
     (Array.isArray(serp?.ads) ? serp.ads : undefined) ??
     (Array.isArray(serp?.list) ? serp.list : undefined) ??
@@ -237,8 +303,7 @@ function parseAd(ad: IkmanAd, area: string, categorySlug: string): Partial<Listi
 
   const contact     = ad.contact?.chat_phone_number ?? ad.contact?.phone ?? null
   const description = ad.description ?? null
-  const posted_at   =
-    ad.posted_at ?? ad.postedDate ?? ad.lastBumpUpDate ?? ad.timeStamp ?? ad.created_at ?? null
+  const posted_at = parsePostedAt(ad.postedDate, ad.adDate, ad.posted_at, ad.created_at)
 
   return {
     ikman_id: ikmanId,
@@ -287,41 +352,53 @@ export async function enrichListingsWithDetails(
 
   let done = 0
 
-  await runWithConcurrency(toFetch, concurrency, async (listing, i) => {
+  const fetchOne = async (listing: Partial<Listing>, index: number, totalCount: number) => {
     const label = listing.title?.slice(0, 45) ?? listing.url
-    console.log(`  Detail ${i + 1}/${total}: ${label}`)
+    console.log(`  Detail ${index + 1}/${totalCount}: ${label}`)
 
     const detail = await scrapeDetailPage(app, listing.url!)
     if (detail.description) listing.description = detail.description
     if (detail.contact) listing.contact = detail.contact
+    if (detail.posted_at) listing.posted_at = detail.posted_at
     if (detail.photos.length > (listing.photos?.length ?? 0)) {
       listing.photos = detail.photos
     }
 
     done++
-    if (done % 10 === 0 || done === total) {
-      console.log(`  Progress: ${done}/${total} detail pages fetched`)
+    if (done % 10 === 0 || done === totalCount) {
+      console.log(`  Progress: ${done}/${totalCount} detail pages fetched`)
     }
-  })
+  }
+
+  await runWithConcurrency(toFetch, concurrency, (listing, i) =>
+    fetchOne(listing, i, total),
+  )
+
+  const retry = listings.filter((l) => l.url && !l.contact)
+  if (retry.length) {
+    console.log(`\nRetrying ${retry.length} listings still missing contact...`)
+    await runWithConcurrency(retry, 2, (listing, i) => fetchOne(listing, i, retry.length))
+  }
 }
 
 async function scrapeDetailPage(
   app: FirecrawlApp,
   url: string,
-): Promise<{ description: string | null; contact: string | null; photos: string[] }> {
+): Promise<{
+  description: string | null
+  contact: string | null
+  photos: string[]
+  posted_at: string | null
+}> {
   try {
-    const res = await app.scrape(url, {
-      formats: ['rawHtml'],
-      onlyMainContent: false,
-      waitFor: 2000,
-    })
-    if (!res.rawHtml) return { description: null, contact: null, photos: [] }
+    const rawHtml = await scrapeRawHtml(app, url)
+    if (!rawHtml) return { description: null, contact: null, photos: [], posted_at: null }
 
-    const data = extractInitialData(res.rawHtml)
-    if (!data) return { description: null, contact: null, photos: [] }
+    const data = extractInitialData(rawHtml)
+    if (!data) return { description: null, contact: null, photos: [], posted_at: null }
 
     const ad = extractDetailAd(data)
-    if (!ad) return { description: null, contact: null, photos: [] }
+    if (!ad) return { description: null, contact: null, photos: [], posted_at: null }
 
     const photos = buildDetailPhotos(ad)
     const contact =
@@ -330,11 +407,12 @@ async function scrapeDetailPage(
       ad.contact?.phone ??
       null
     const description = ad.description?.slice(0, 1000) ?? null
+    const posted_at = parsePostedAt(ad.postedDate, ad.adDate, ad.posted_at, ad.created_at)
 
-    return { description, contact, photos }
+    return { description, contact, photos, posted_at }
   } catch (err) {
     console.error(`  Detail scrape failed for ${url}:`, (err as Error).message)
-    return { description: null, contact: null, photos: [] }
+    return { description: null, contact: null, photos: [], posted_at: null }
   }
 }
 
@@ -359,18 +437,14 @@ export async function runScraper(config: ScrapeConfig): Promise<Partial<Listing>
         console.log(`Scraping (page ${page}): ${url}`)
 
         try {
-          const res = await app.scrape(url, {
-            formats: ['rawHtml'],
-            onlyMainContent: false,
-            waitFor: 2000,
-          })
+          const rawHtml = await scrapeRawHtml(app, url)
 
-          if (!res.rawHtml) {
+          if (!rawHtml) {
             console.log(`  Firecrawl returned no HTML`)
             break
           }
 
-          const data = extractInitialData(res.rawHtml)
+          const data = extractInitialData(rawHtml)
           if (!data) {
             console.log(`  window.initialData not found in HTML`)
             break
