@@ -71,14 +71,22 @@ export async function getListings(
   if (max_bedrooms)  query = query.lte('bedrooms', max_bedrooms)
   if (is_new !== undefined) query = query.eq('is_new', is_new)
 
-  const orderMap: Record<string, { column: string; ascending: boolean }> = {
-    price_asc:  { column: 'price',      ascending: true  },
-    price_desc: { column: 'price',      ascending: false },
-    date_desc:  { column: 'created_at', ascending: false },
-    date_asc:   { column: 'created_at', ascending: true  },
+  // date sorts: prefer posted_at (ikman post date), fall back to created_at (scrape time)
+  // nullsFirst: false keeps NULL posted_at rows at the bottom
+  if (sort === 'date_desc') {
+    query = query
+      .order('posted_at',   { ascending: false, nullsFirst: false })
+      .order('created_at',  { ascending: false })
+  } else if (sort === 'date_asc') {
+    query = query
+      .order('posted_at',   { ascending: true,  nullsFirst: false })
+      .order('created_at',  { ascending: true  })
+  } else if (sort === 'price_asc') {
+    query = query.order('price', { ascending: true,  nullsFirst: false })
+  } else {
+    // price_desc
+    query = query.order('price', { ascending: false, nullsFirst: false })
   }
-  const { column, ascending } = orderMap[sort]
-  query = query.order(column, { ascending })
 
   query = query.range((page - 1) * limit, page * limit - 1)
 
@@ -106,6 +114,18 @@ export async function markListingsRead(client: SupabaseClient, ids: string[]): P
     .from('listings')
     .update({ is_new: false })
     .in('id', ids)
+  if (error) throw error
+}
+
+export async function setListingNew(
+  client: SupabaseClient,
+  id: string,
+  isNew: boolean,
+): Promise<void> {
+  const { error } = await client
+    .from('listings')
+    .update({ is_new: isNew })
+    .eq('id', id)
   if (error) throw error
 }
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Save, Loader2, X, Plus } from 'lucide-react'
+import { Save, Loader2, X, Plus, Send, CheckCircle2, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
@@ -57,6 +57,8 @@ export function SettingsForm() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [customArea, setCustomArea] = useState('')
+  const [testing, setTesting] = useState(false)
+  const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null)
 
   useEffect(() => {
     fetch('/api/settings')
@@ -106,6 +108,21 @@ export function SettingsForm() {
           : [...listing_types, type],
       }
     })
+  }
+
+  async function handleTestWhatsApp() {
+    setTesting(true)
+    setTestResult(null)
+    try {
+      const res = await fetch('/api/test-whatsapp', { method: 'POST' })
+      const data = await res.json()
+      setTestResult({ ok: data.ok, message: data.message ?? data.error ?? 'Unknown error' })
+    } catch {
+      setTestResult({ ok: false, message: 'Request failed — is the server running?' })
+    } finally {
+      setTesting(false)
+      setTimeout(() => setTestResult(null), 6000)
+    }
   }
 
   function addCustomArea() {
@@ -307,6 +324,28 @@ export function SettingsForm() {
               onChange={(e) => setSettings((s) => ({ ...s, whatsapp_number: e.target.value }))}
             />
             <p className="text-xs text-muted-foreground">Format: +94XXXXXXXXX</p>
+            <div className="flex items-center gap-3 pt-1">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={testing || !settings.whatsapp_number}
+                onClick={handleTestWhatsApp}
+              >
+                {testing
+                  ? <Loader2 size={14} className="animate-spin" />
+                  : <Send size={14} />}
+                {testing ? 'Sending…' : 'Send test message'}
+              </Button>
+              {testResult && (
+                <span className={`flex items-center gap-1.5 text-sm ${testResult.ok ? 'text-green-600' : 'text-destructive'}`}>
+                  {testResult.ok
+                    ? <CheckCircle2 size={14} />
+                    : <AlertCircle size={14} />}
+                  {testResult.message}
+                </span>
+              )}
+            </div>
           </div>
 
           <Separator />

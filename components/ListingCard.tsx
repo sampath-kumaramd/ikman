@@ -1,11 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { ExternalLink, Phone, MapPin, BedDouble, Calendar } from 'lucide-react'
+import { ExternalLink, Phone, MapPin, BedDouble, Calendar, Eye, EyeOff } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { buttonVariants } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { Listing } from '@/lib/types'
 
@@ -15,8 +15,16 @@ const TYPE_VARIANTS: Record<string, 'default' | 'secondary' | 'outline'> = {
   annex:     'outline',
 }
 
-export function ListingCard({ listing }: { listing: Listing }) {
+interface ListingCardProps {
+  listing: Listing
+  onToggleViewed?: (id: string, isNew: boolean) => void
+}
+
+export function ListingCard({ listing, onToggleViewed }: ListingCardProps) {
   const [imgError, setImgError] = useState(false)
+  const [isNew, setIsNew]       = useState(listing.is_new)
+  const [toggling, setToggling] = useState(false)
+
   const photo = !imgError && listing.photos?.[0] ? listing.photos[0] : null
 
   const postedAgo = listing.posted_at
@@ -25,13 +33,48 @@ export function ListingCard({ listing }: { listing: Listing }) {
     ? formatDistanceToNow(new Date(listing.created_at), { addSuffix: true })
     : null
 
+  async function markViewed() {
+    if (!isNew) return
+    setIsNew(false)
+    onToggleViewed?.(listing.id, false)
+    await fetch('/api/listings', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: listing.id, is_new: false }),
+    })
+  }
+
+  async function toggleNew() {
+    setToggling(true)
+    const next = !isNew
+    setIsNew(next)
+    onToggleViewed?.(listing.id, next)
+    await fetch('/api/listings', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: listing.id, is_new: next }),
+    })
+    setToggling(false)
+  }
+
   return (
-    <Card className="overflow-hidden gap-0 py-0 hover:shadow-lg transition-shadow duration-200">
+    <Card className={cn(
+      'overflow-hidden gap-0 py-0 hover:shadow-lg transition-all duration-200',
+      !isNew && 'opacity-75',
+    )}>
       {/* Photo */}
       <div className="relative h-44 bg-muted overflow-hidden">
-        {listing.is_new && (
+        {isNew && (
           <Badge className="absolute top-3 left-3 z-10 bg-orange-500 text-white hover:bg-orange-500">
             NEW
+          </Badge>
+        )}
+        {!isNew && (
+          <Badge
+            variant="secondary"
+            className="absolute top-3 left-3 z-10 text-muted-foreground"
+          >
+            Viewed
           </Badge>
         )}
         {photo ? (
@@ -99,7 +142,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
         )}
 
         {/* Actions */}
-        <div className="flex gap-2 pt-1">
+        <div className="flex gap-2 pt-1 flex-wrap">
           {listing.contact && (
             <a
               href={`tel:${listing.contact}`}
@@ -108,10 +151,27 @@ export function ListingCard({ listing }: { listing: Listing }) {
               <Phone size={12} /> {listing.contact}
             </a>
           )}
+
+          {/* Viewed / Unviewed toggle */}
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={toggling}
+            onClick={toggleNew}
+            className="text-muted-foreground hover:text-foreground"
+            title={isNew ? 'Mark as viewed' : 'Mark as new'}
+          >
+            {isNew
+              ? <><Eye size={12} /> Mark viewed</>
+              : <><EyeOff size={12} /> Mark new</>
+            }
+          </Button>
+
           <a
             href={listing.url}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={markViewed}
             className={cn(buttonVariants({ variant: 'secondary', size: 'sm' }), 'ml-auto')}
           >
             View on ikman <ExternalLink size={12} />

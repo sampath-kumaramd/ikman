@@ -132,7 +132,16 @@ export default function DashboardPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {listings.map((l) => (
-            <ListingCard key={l.id} listing={l} />
+            <ListingCard
+              key={l.id}
+              listing={l}
+              onToggleViewed={(id, isNew) => {
+                setListings((prev) =>
+                  prev.map((x) => (x.id === id ? { ...x, is_new: isNew } : x)),
+                )
+                setNewCount((n) => isNew ? n + 1 : Math.max(0, n - 1))
+              }}
+            />
           ))}
         </div>
       )}
