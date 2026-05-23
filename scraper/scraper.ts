@@ -379,7 +379,6 @@ function parseAd(ad: IkmanAd, area: string, categorySlug: string): Partial<Listi
     ad.timeStamp,
     ad.lastBumpUpDate,
     ad.posted_at,
-    ad.created_at,
   )
 
   return {
@@ -485,12 +484,11 @@ async function scrapeDetailPage(
       null
     const description = ad.description?.slice(0, 1000) ?? null
     const posted_at = parsePostedAt(
-    ad.adDate,
-    ad.timeStamp,
-    ad.lastBumpUpDate,
-    ad.posted_at,
-    ad.created_at,
-  )
+      ad.adDate,
+      ad.timeStamp,
+      ad.lastBumpUpDate,
+      ad.posted_at,
+    )
 
     return { description, contact, photos, posted_at }
   } catch (err) {
