@@ -149,12 +149,12 @@ async function scrapeDetailPage(
   url: string,
 ): Promise<{ description: string | null; contact: string | null; photos: string[] }> {
   try {
-    const res = await app.scrapeUrl(url, {
+    const res = await app.scrape(url, {
       formats: ['rawHtml'],
       onlyMainContent: false,
       waitFor: 2000,
     })
-    if (!res.success || !res.rawHtml) return { description: null, contact: null, photos: [] }
+    if (!res.rawHtml) return { description: null, contact: null, photos: [] }
 
     const data = extractInitialData(res.rawHtml)
     if (!data) return { description: null, contact: null, photos: [] }
@@ -198,14 +198,14 @@ export async function runScraper(config: ScrapeConfig): Promise<Partial<Listing>
         console.log(`Scraping (page ${page}): ${url}`)
 
         try {
-          const res = await app.scrapeUrl(url, {
+          const res = await app.scrape(url, {
             formats: ['rawHtml'],
             onlyMainContent: false,
             waitFor: 2000,
           })
 
-          if (!res.success || !res.rawHtml) {
-            console.log(`  Firecrawl failed or returned no HTML`)
+          if (!res.rawHtml) {
+            console.log(`  Firecrawl returned no HTML`)
             break
           }
 
