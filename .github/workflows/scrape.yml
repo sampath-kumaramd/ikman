@@ -1,0 +1,37 @@
+name: Scrape ikman.lk
+
+on:
+  schedule:
+    # Every 30 minutes — adjust cron expression to change the interval
+    - cron: '*/30 * * * *'
+  # Allows "Run Now" from the UI (calls GitHub API workflow_dispatch)
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium --with-deps
+
+      - name: Run scraper
+        env:
+          SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          CALLMEBOT_API_KEY:         ${{ secrets.CALLMEBOT_API_KEY }}
+          WHATSAPP_NUMBER:           ${{ secrets.WHATSAPP_NUMBER }}
+        run: npx tsx scraper/index.ts
