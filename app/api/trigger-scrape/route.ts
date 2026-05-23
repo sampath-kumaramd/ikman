@@ -24,7 +24,7 @@ export async function POST() {
       'X-GitHub-Api-Version': '2022-11-28',
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ ref: 'main' }),
+    body: JSON.stringify({ ref: process.env.GITHUB_BRANCH ?? 'master' }),
   })
 
   if (!res.ok) {
