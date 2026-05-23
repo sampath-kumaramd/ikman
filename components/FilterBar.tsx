@@ -152,7 +152,7 @@ export function FilterBar({ filters, areas, onChange }: FilterBarProps) {
           <label className="text-xs font-medium text-muted-foreground">Status</label>
           <Select
             value={statusFromFilters(filters)}
-            onValueChange={(val) => set({ is_new: isNewFromStatus(val) })}
+            onValueChange={(val) => set({ is_new: isNewFromStatus(val ?? 'all') })}
           >
             <SelectTrigger className="w-full h-9">
               <SelectValue />
