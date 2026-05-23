@@ -10,6 +10,7 @@
     "scrape": "tsx scraper/index.ts"
   },
   "dependencies": {
+    "@mendable/firecrawl-js": "^4.24.2",
     "@supabase/supabase-js": "^2.106.1",
     "date-fns": "^4.3.0",
     "lucide-react": "^1.16.0",

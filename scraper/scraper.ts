@@ -1,4 +1,4 @@
-import { chromium } from 'playwright'
+import FirecrawlApp from '@mendable/firecrawl-js'
 import type { Listing } from '../lib/types'
 
 const AREA_SLUGS: Record<string, string> = {
@@ -25,13 +25,13 @@ export interface ScrapeConfig {
   max_price: number
   min_bedrooms: number
   max_bedrooms: number
+  firecrawlApiKey: string
 }
 
-// Shape of ads inside window.initialData on ikman.lk
 interface IkmanAd {
   slug?:        string
   title?:       string
-  money?:       { price?: number; currency?: string }
+  money?:       { price?: number }
   locations?:   { slug?: string; name?: string }[]
   thumbnails?:  { cdn_url?: string }[]
   images?:      { cdn_url?: string }[]
@@ -42,223 +42,210 @@ interface IkmanAd {
   attributes?:  { name?: string; value?: string }[]
 }
 
-function extractIkmanId(slug: string): string {
-  // slug looks like "2-bedroom-apartment-mount-lavinia-abc123"
-  const parts = slug.split('-')
-  return parts[parts.length - 1] || slug
+// Extract window.initialData JSON from raw HTML using brace counting
+function extractInitialData(html: string): Record<string, unknown> | null {
+  const marker = 'window.initialData = '
+  const start  = html.indexOf(marker)
+  if (start === -1) return null
+
+  const rest  = html.slice(start + marker.length)
+  let depth = 0
+  let i     = 0
+
+  for (; i < rest.length; i++) {
+    if      (rest[i] === '{') depth++
+    else if (rest[i] === '}') { depth--; if (depth === 0) { i++; break } }
+  }
+
+  try {
+    return JSON.parse(rest.slice(0, i))
+  } catch {
+    return null
+  }
 }
 
-function parseBedrooms(title: string, attributes: IkmanAd['attributes']): number | null {
-  // Try attributes first (most reliable)
-  if (attributes) {
-    for (const attr of attributes) {
-      if (attr.name?.toLowerCase().includes('bedroom') || attr.name?.toLowerCase().includes('room')) {
-        const n = parseInt(attr.value ?? '', 10)
-        if (!isNaN(n)) return n
-      }
+function extractAdsList(data: Record<string, unknown>): IkmanAd[] {
+  // Log top-level keys to help debug any future structure changes
+  console.log('  initialData keys:', Object.keys(data).join(', '))
+
+  const listing = data.listing as Record<string, unknown> | undefined
+
+  const ads =
+    (listing?.list as IkmanAd[] | undefined) ??
+    (listing?.ads  as IkmanAd[] | undefined) ??
+    (data.ads      as IkmanAd[] | undefined) ??
+    []
+
+  console.log(`  Ads in initialData: ${ads.length}`)
+  return ads
+}
+
+function parseAd(ad: IkmanAd, area: string, categorySlug: string): Partial<Listing> | null {
+  if (!ad.slug) return null
+
+  const slug     = ad.slug
+  const ikmanId  = slug.split('-').pop() ?? slug
+  const title    = ad.title ?? ''
+  const price    = ad.money?.price ?? null
+  const location = ad.locations?.[0]?.name ?? area
+
+  // Bedrooms from attributes first, then title
+  let bedrooms: number | null = null
+  for (const attr of ad.attributes ?? []) {
+    if (attr.name?.toLowerCase().includes('bedroom') || attr.name?.toLowerCase().includes('room')) {
+      const n = parseInt(attr.value ?? '', 10)
+      if (!isNaN(n)) { bedrooms = n; break }
     }
   }
-  // Fall back to title
-  const m = title.match(/(\d+)\s*(?:bed(?:room)?s?|BR)/i)
-  return m ? parseInt(m[1], 10) : null
-}
+  if (bedrooms === null) {
+    const m = title.match(/(\d+)\s*(?:bed(?:room)?s?|BR)/i)
+    if (m) bedrooms = parseInt(m[1], 10)
+  }
 
-function inferListingType(categorySlug: string, title: string): Listing['listing_type'] {
-  if (categorySlug.includes('apartment')) return 'apartment'
-  if (categorySlug.includes('house'))     return 'house'
-  if (categorySlug.includes('room') || categorySlug.includes('annex')) return 'annex'
-  const t = title.toLowerCase()
-  if (t.includes('apartment') || t.includes('flat'))  return 'apartment'
-  if (t.includes('annex')     || t.includes('room'))  return 'annex'
-  if (t.includes('house')     || t.includes('villa')) return 'house'
-  return null
-}
-
-function parseAdFromInitialData(
-  ad: IkmanAd,
-  area: string,
-  categorySlug: string,
-): Partial<Listing> | null {
-  const slug = ad.slug ?? ''
-  if (!slug) return null
-
-  const ikmanId    = extractIkmanId(slug)
-  const title      = ad.title ?? ''
-  const price      = ad.money?.price ?? null
-  const location   = ad.locations?.[0]?.name ?? area
-  const bedrooms   = parseBedrooms(title, ad.attributes)
-  const photos     = [
+  const photos: string[] = [
     ...(ad.thumbnails ?? []).map((t) => t.cdn_url ?? ''),
     ...(ad.images     ?? []).map((i) => i.cdn_url ?? ''),
   ].filter(Boolean)
-  const postedAt   = ad.posted_at ?? ad.created_at ?? null
-  const contact    = ad.contact?.chat_phone_number ?? ad.contact?.phone ?? null
+
+  let listing_type: Listing['listing_type'] = null
+  if (categorySlug.includes('apartment'))                      listing_type = 'apartment'
+  else if (categorySlug.includes('house'))                     listing_type = 'house'
+  else if (categorySlug.includes('room') || categorySlug.includes('annex')) listing_type = 'annex'
+  else {
+    const t = title.toLowerCase()
+    if (t.includes('apartment') || t.includes('flat'))  listing_type = 'apartment'
+    else if (t.includes('annex') || t.includes('room')) listing_type = 'annex'
+    else if (t.includes('house') || t.includes('villa'))listing_type = 'house'
+  }
+
+  const contact     = ad.contact?.chat_phone_number ?? ad.contact?.phone ?? null
   const description = ad.description ?? null
-  const url        = `https://ikman.lk/en/ad/${slug}`
+  const posted_at   = ad.posted_at ?? ad.created_at ?? null
 
   return {
-    ikman_id:     ikmanId,
+    ikman_id: ikmanId,
     title,
     price,
     location,
     area,
     bedrooms,
-    listing_type: inferListingType(categorySlug, title),
+    listing_type,
     description,
     photos,
     contact,
-    posted_at:    postedAt,
-    url,
-    is_new:       true,
+    posted_at,
+    url: `https://ikman.lk/en/ad/${slug}`,
+    is_new: true,
   }
 }
 
-async function scrapeListingDetail(
-  page: import('playwright').Page,
+async function scrapeDetailPage(
+  app: FirecrawlApp,
   url: string,
 ): Promise<{ description: string | null; contact: string | null; photos: string[] }> {
   try {
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 25000 })
-    await page.waitForTimeout(2000)
+    const res = await app.scrapeUrl(url, { formats: ['rawHtml'] })
+    if (!res.success || !res.rawHtml) return { description: null, contact: null, photos: [] }
 
-    const detail = await page.evaluate(() => {
-      const w     = window as Window & { initialData?: Record<string, unknown> }
-      const data  = w.initialData as Record<string, unknown> | undefined
-      if (!data) return null
+    const data = extractInitialData(res.rawHtml)
+    if (!data) return { description: null, contact: null, photos: [] }
 
-      // The detail page initialData has an "ad" key
-      const ad = data.ad as IkmanAd | undefined
-      if (!ad) return null
+    const ad = data.ad as IkmanAd | undefined
+    if (!ad) return { description: null, contact: null, photos: [] }
 
-      const photos = [
-        ...((ad.thumbnails ?? []) as { cdn_url?: string }[]).map((t) => t.cdn_url ?? ''),
-        ...((ad.images     ?? []) as { cdn_url?: string }[]).map((i) => i.cdn_url ?? ''),
-      ].filter(Boolean) as string[]
+    const photos: string[] = [
+      ...(ad.thumbnails ?? []).map((t) => t.cdn_url ?? ''),
+      ...(ad.images     ?? []).map((i) => i.cdn_url ?? ''),
+    ].filter(Boolean)
 
-      const contact = (ad.contact as { chat_phone_number?: string; phone?: string } | undefined)
-        ?.chat_phone_number ??
-        (ad.contact as { chat_phone_number?: string; phone?: string } | undefined)?.phone ??
-        null
+    const contact     = ad.contact?.chat_phone_number ?? ad.contact?.phone ?? null
+    const description = ad.description?.slice(0, 1000) ?? null
 
-      return {
-        description: (ad.description as string | undefined) ?? null,
-        contact,
-        photos,
-      }
-    })
-
-    return detail ?? { description: null, contact: null, photos: [] }
-  } catch {
+    return { description, contact, photos }
+  } catch (err) {
+    console.error(`  Detail scrape failed for ${url}:`, (err as Error).message)
     return { description: null, contact: null, photos: [] }
   }
 }
 
 export async function runScraper(config: ScrapeConfig): Promise<Partial<Listing>[]> {
-  const browser = await chromium.launch({ headless: true })
-  const context = await browser.newContext({
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-    locale: 'en-US',
-  })
-
+  const app = new FirecrawlApp({ apiKey: config.firecrawlApiKey })
   const allListings: Partial<Listing>[] = []
 
-  try {
-    const page = await context.newPage()
-    page.setDefaultTimeout(30000)
+  for (const area of config.areas) {
+    const areaSlug = AREA_SLUGS[area] ?? area.toLowerCase().replace(/\s+/g, '-')
 
-    for (const area of config.areas) {
-      const areaSlug     = AREA_SLUGS[area] ?? area.toLowerCase().replace(/\s+/g, '-')
+    for (const type of config.listing_types) {
+      const categorySlug = TYPE_SLUGS[type] ?? 'apartment-rentals'
+      const params       = new URLSearchParams({
+        'money.price.maximum': String(config.max_price),
+        sort:  'date',
+        order: 'desc',
+      })
+      const url = `https://ikman.lk/en/ads/${areaSlug}/${categorySlug}?${params}`
+      console.log(`Scraping: ${url}`)
 
-      for (const type of config.listing_types) {
-        const categorySlug = TYPE_SLUGS[type] ?? 'apartment-rentals'
-        const params       = new URLSearchParams({
-          'money.price.maximum': String(config.max_price),
-          sort:  'date',
-          order: 'desc',
-        })
-        const url = `https://ikman.lk/en/ads/${areaSlug}/${categorySlug}?${params}`
-        console.log(`Scraping: ${url}`)
+      try {
+        const res = await app.scrapeUrl(url, { formats: ['rawHtml'] })
 
-        try {
-          // domcontentloaded is enough — data is in window.initialData set by SSR
-          await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 })
-          await page.waitForTimeout(1500)
-
-          // Extract listings directly from window.initialData
-          const ads = await page.evaluate(() => {
-            const w    = window as Window & { initialData?: Record<string, unknown> }
-            const data = w.initialData
-            if (!data) return null
-
-            // Log top-level keys to help debug structure on first run
-            console.log('[ikman] initialData keys:', Object.keys(data).join(', '))
-
-            // ikman.lk SSR puts listings under data.listing.list or data.ads.list
-            const listing = data.listing as Record<string, unknown> | undefined
-            const adsList =
-              (listing?.list  as unknown[]) ??
-              (listing?.ads   as unknown[]) ??
-              (data.ads       as unknown[]) ??
-              []
-
-            console.log('[ikman] ads found:', adsList.length)
-            return adsList
-          })
-
-          if (!ads || !Array.isArray(ads)) {
-            console.log('  No ads array found in initialData — skipping')
-            continue
-          }
-
-          console.log(`  Raw ads in initialData: ${ads.length}`)
-
-          const parsed: Partial<Listing>[] = []
-          for (const ad of ads as IkmanAd[]) {
-            const listing = parseAdFromInitialData(ad, area, categorySlug)
-            if (!listing) continue
-
-            // Filter by price and bedrooms
-            if (listing.price && listing.price > config.max_price) continue
-            if (listing.bedrooms !== null && listing.bedrooms !== undefined) {
-              if (listing.bedrooms < config.min_bedrooms) continue
-              if (listing.bedrooms > config.max_bedrooms) continue
-            }
-
-            parsed.push(listing)
-          }
-
-          console.log(`  Kept ${parsed.length} listings after filtering`)
-          allListings.push(...parsed)
-        } catch (err) {
-          console.error(`  Error: ${(err as Error).message}`)
+        if (!res.success || !res.rawHtml) {
+          console.log(`  Firecrawl failed or returned no HTML`)
+          continue
         }
 
-        await page.waitForTimeout(1000)
-      }
-    }
+        const data = extractInitialData(res.rawHtml)
+        if (!data) {
+          console.log(`  window.initialData not found in HTML`)
+          continue
+        }
 
-    // Enrich with detail page data (better photos, contact, description)
-    console.log(`\nFetching details for ${allListings.length} listings...`)
-    const detailPage = await context.newPage()
-    for (const listing of allListings) {
-      if (!listing.url) continue
-      const detail = await scrapeListingDetail(detailPage, listing.url)
-      if (detail.description) listing.description = detail.description
-      if (detail.contact)     listing.contact     = detail.contact
-      if (detail.photos.length > (listing.photos?.length ?? 0)) {
-        listing.photos = detail.photos
+        const ads    = extractAdsList(data)
+        const parsed: Partial<Listing>[] = []
+
+        for (const ad of ads) {
+          const listing = parseAd(ad, area, categorySlug)
+          if (!listing) continue
+
+          if (listing.price && listing.price > config.max_price) continue
+          if (listing.bedrooms != null) {
+            if (listing.bedrooms < config.min_bedrooms) continue
+            if (listing.bedrooms > config.max_bedrooms) continue
+          }
+
+          parsed.push(listing)
+        }
+
+        console.log(`  Kept ${parsed.length} of ${ads.length} listings after filtering`)
+        allListings.push(...parsed)
+      } catch (err) {
+        console.error(`  Error: ${(err as Error).message}`)
       }
-      await detailPage.waitForTimeout(800)
+
+      // Polite delay between pages
+      await new Promise((r) => setTimeout(r, 1000))
     }
-  } finally {
-    await browser.close()
   }
 
-  // Deduplicate by ikman_id
+  // Deduplicate
   const seen = new Set<string>()
-  return allListings.filter((l) => {
+  const unique = allListings.filter((l) => {
     if (!l.ikman_id || seen.has(l.ikman_id)) return false
     seen.add(l.ikman_id)
     return true
   })
+
+  // Enrich with detail pages for listings missing contact/description
+  const needsDetail = unique.filter((l) => !l.contact || !l.description)
+  console.log(`\nFetching details for ${needsDetail.length} listings...`)
+
+  for (const listing of needsDetail) {
+    if (!listing.url) continue
+    const detail = await scrapeDetailPage(app, listing.url)
+    if (detail.description) listing.description = detail.description
+    if (detail.contact)     listing.contact     = detail.contact
+    if (detail.photos.length > (listing.photos?.length ?? 0)) listing.photos = detail.photos
+    await new Promise((r) => setTimeout(r, 500))
+  }
+
+  return unique
 }

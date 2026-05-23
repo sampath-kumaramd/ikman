@@ -36,13 +36,20 @@ async function main() {
   const existingIds = await getExistingIkmanIds(db)
   console.log(`${existingIds.size} listings already in DB`)
 
+  const firecrawlApiKey = process.env.FIRECRAWL_API_KEY ?? ''
+  if (!firecrawlApiKey) {
+    console.error('Missing FIRECRAWL_API_KEY')
+    process.exit(1)
+  }
+
   console.log('Starting scrape...')
   const scraped = await runScraper({
-    areas:         settings.areas,
-    listing_types: settings.listing_types,
-    max_price:     settings.max_price,
-    min_bedrooms:  settings.min_bedrooms,
-    max_bedrooms:  settings.max_bedrooms,
+    areas:           settings.areas,
+    listing_types:   settings.listing_types,
+    max_price:       settings.max_price,
+    min_bedrooms:    settings.min_bedrooms,
+    max_bedrooms:    settings.max_bedrooms,
+    firecrawlApiKey,
   })
   console.log(`Scraped ${scraped.length} listings matching filters`)
 
