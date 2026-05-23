@@ -1,17 +1,13 @@
 import { NextResponse } from 'next/server'
-import { sendWhatsApp } from '../../../scraper/whatsapp'
+import { sendTelegram } from '../../../scraper/telegram'
 
 export async function POST() {
-  const accountSid  = process.env.TWILIO_ACCOUNT_SID
-  const authToken   = process.env.TWILIO_AUTH_TOKEN
-  const fromNumber  = process.env.TWILIO_FROM_NUMBER
-  const toNumber    = process.env.WHATSAPP_NUMBER
+  const token  = process.env.TELEGRAM_BOT_TOKEN
+  const chatId = process.env.TELEGRAM_CHAT_ID
 
   const missing = [
-    !accountSid  && 'TWILIO_ACCOUNT_SID',
-    !authToken   && 'TWILIO_AUTH_TOKEN',
-    !fromNumber  && 'TWILIO_FROM_NUMBER',
-    !toNumber    && 'WHATSAPP_NUMBER',
+    !token  && 'TELEGRAM_BOT_TOKEN',
+    !chatId && 'TELEGRAM_CHAT_ID',
   ].filter(Boolean)
 
   if (missing.length) {
@@ -21,15 +17,15 @@ export async function POST() {
     )
   }
 
-  const message = `ikman tracker test ✅\nTwilio connection is working.\n${new Date().toLocaleString('en-LK', { timeZone: 'Asia/Colombo' })}`
+  const message = `🔔 <b>ikman tracker — test message</b>\nTelegram connection is working ✅\n${new Date().toLocaleString('en-LK', { timeZone: 'Asia/Colombo' })}`
 
-  const sent = await sendWhatsApp(accountSid!, authToken!, fromNumber!, toNumber!, message)
+  const sent = await sendTelegram(token!, chatId!, message)
 
   if (sent) {
-    return NextResponse.json({ ok: true, message: `Test message sent to ${toNumber}` })
+    return NextResponse.json({ ok: true, message: `Test message sent to chat ${chatId}` })
   } else {
     return NextResponse.json(
-      { ok: false, error: 'Twilio returned an error — check server logs for details' },
+      { ok: false, error: 'Telegram returned an error — check server logs for details' },
       { status: 502 },
     )
   }

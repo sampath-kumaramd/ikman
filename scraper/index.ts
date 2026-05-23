@@ -9,7 +9,7 @@
 import { createClient } from '@supabase/supabase-js'
 import FirecrawlApp from '@mendable/firecrawl-js'
 import { runScraper, enrichListingsWithDetails, sanitizeListingForDb } from './scraper'
-import { sendWhatsApp, buildListingMessage } from './whatsapp'
+import { sendTelegram, buildListingMessage } from './telegram'
 import { getSettings, upsertListings, getExistingIkmanIds, createNotification } from '../lib/db'
 import type { Listing } from '../lib/types'
 
@@ -73,37 +73,27 @@ async function main() {
     newListings.map((l) => sanitizeListingForDb(l)) as Omit<Listing, 'id' | 'created_at'>[],
   )
 
-  // Twilio credentials
-  const accountSid  = process.env.TWILIO_ACCOUNT_SID  ?? ''
-  const authToken   = process.env.TWILIO_AUTH_TOKEN    ?? ''
-  const fromNumber  = process.env.TWILIO_FROM_NUMBER   ?? ''
-  const toNumber    = process.env.WHATSAPP_NUMBER ?? settings.whatsapp_number
-  const twilioReady = !!(accountSid && authToken && fromNumber && toNumber)
-  if (!twilioReady) {
-    const missing = [
-      !accountSid && 'TWILIO_ACCOUNT_SID',
-      !authToken && 'TWILIO_AUTH_TOKEN',
-      !fromNumber && 'TWILIO_FROM_NUMBER',
-      !toNumber && 'WHATSAPP_NUMBER',
-    ].filter(Boolean)
-    console.warn(
-      `WhatsApp skipped — add to .env (or GitHub secrets): ${missing.join(', ')}`,
-    )
+  const telegramToken  = process.env.TELEGRAM_BOT_TOKEN ?? ''
+  const telegramChatId = process.env.TELEGRAM_CHAT_ID   ?? ''
+  const telegramReady  = !!(telegramToken && telegramChatId)
+
+  if (!telegramReady) {
+    console.warn('Telegram skipped — add TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID to .env / GitHub secrets')
   }
 
   for (const listing of saved) {
-    let whatsappSent = false
+    let notified = false
 
-    if (twilioReady) {
+    if (telegramReady) {
       const msg = buildListingMessage(listing)
-      whatsappSent = await sendWhatsApp(accountSid, authToken, fromNumber, toNumber, msg)
-      // Brief delay between messages to avoid rate limits
-      await new Promise((r) => setTimeout(r, 1000))
+      notified = await sendTelegram(telegramToken, telegramChatId, msg)
+      // Small delay between messages to stay under Telegram rate limits (30 msg/s)
+      await new Promise((r) => setTimeout(r, 300))
     }
 
-    await createNotification(db, listing.id, whatsappSent)
+    await createNotification(db, listing.id, notified)
     console.log(
-      `Saved: ${listing.title}${whatsappSent ? ' (WhatsApp sent)' : ' (no WhatsApp — check Twilio env)'}`,
+      `Saved: ${listing.title}${notified ? ' (Telegram sent)' : ' (no Telegram — check env)'}`,
     )
   }
 

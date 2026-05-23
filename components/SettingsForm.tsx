@@ -316,20 +316,16 @@ export function SettingsForm() {
           <Separator />
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">WhatsApp number</label>
-            <Input
-              type="tel"
-              placeholder="+94760937443"
-              value={settings.whatsapp_number}
-              onChange={(e) => setSettings((s) => ({ ...s, whatsapp_number: e.target.value }))}
-            />
-            <p className="text-xs text-muted-foreground">Format: +94XXXXXXXXX</p>
+            <label className="text-sm font-medium">Telegram notification</label>
+            <p className="text-xs text-muted-foreground">
+              Notifications are sent via Telegram bot. Configure <code className="bg-muted px-1 rounded text-xs">TELEGRAM_BOT_TOKEN</code> and <code className="bg-muted px-1 rounded text-xs">TELEGRAM_CHAT_ID</code> in your environment.
+            </p>
             <div className="flex items-center gap-3 pt-1">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                disabled={testing || !settings.whatsapp_number}
+                disabled={testing}
                 onClick={handleTestWhatsApp}
               >
                 {testing
