@@ -122,18 +122,89 @@ function parsePrice(value: string | number | undefined | null): number | null {
   return m ? parseInt(m[1], 10) : null
 }
 
-/** ikman SERP uses relative labels ("just now", "5 hours"); Postgres needs ISO or null. */
-export function parsePostedAt(...candidates: (string | undefined | null)[]): string | null {
+const MIN_POSTED_YEAR = 2015
+
+function isPlausiblePostedDate(d: Date): boolean {
+  if (isNaN(d.getTime())) return false
+  const y = d.getFullYear()
+  return y >= MIN_POSTED_YEAR && y <= new Date().getFullYear() + 1
+}
+
+/** ikman SERP/detail: "5 hours", "1 day", "just now", bump_up. */
+function parseRelativePostedAt(label: string): Date | null {
+  const s = label.trim()
+  if (!s || /^bump_up$/i.test(s)) return null
+  if (/^just now$/i.test(s)) return new Date()
+
+  const m = s.match(/^(\d+)\s*(second|minute|hour|day|week|month|year)s?\b/i)
+  if (!m) return null
+
+  const n = parseInt(m[1], 10)
+  const unit = m[2].toLowerCase()
+  const d = new Date()
+  switch (unit) {
+    case 'second':
+      d.setSeconds(d.getSeconds() - n)
+      break
+    case 'minute':
+      d.setMinutes(d.getMinutes() - n)
+      break
+    case 'hour':
+      d.setHours(d.getHours() - n)
+      break
+    case 'day':
+      d.setDate(d.getDate() - n)
+      break
+    case 'week':
+      d.setDate(d.getDate() - n * 7)
+      break
+    case 'month':
+      d.setMonth(d.getMonth() - n)
+      break
+    case 'year':
+      d.setFullYear(d.getFullYear() - n)
+      break
+    default:
+      return null
+  }
+  return isPlausiblePostedDate(d) ? d : null
+}
+
+/**
+ * Normalize ikman date fields to ISO for Postgres.
+ * - adDate: real ISO posted time (preferred on detail pages)
+ * - timeStamp / lastBumpUpDate: relative labels on SERP
+ * - postedDate: small integer month index on detail — NOT a unix timestamp
+ */
+export function parsePostedAt(
+  ...candidates: (string | number | undefined | null)[]
+): string | null {
   for (const raw of candidates) {
     if (raw == null || raw === '') continue
+
+    if (typeof raw === 'number') {
+      // ikman postedDate is often 0–31 (month/days enum), not epoch ms
+      if (raw >= 1e12) {
+        const ms = new Date(raw)
+        if (isPlausiblePostedDate(ms)) return ms.toISOString()
+      } else if (raw >= 1e9) {
+        const sec = new Date(raw * 1000)
+        if (isPlausiblePostedDate(sec)) return sec.toISOString()
+      }
+      continue
+    }
+
     const s = String(raw).trim()
     if (!s) continue
-    if (/^bump_up$/i.test(s)) continue
-    if (/^just now$/i.test(s)) continue
-    if (/^\d+\s*(second|minute|hour|day|week|month|year)s?\b/i.test(s)) continue
+
+    const relative = parseRelativePostedAt(s)
+    if (relative) return relative.toISOString()
+
+    // Avoid "4" / "29" being parsed as bogus calendar dates
+    if (/^\d{1,2}$/.test(s)) continue
 
     const d = new Date(s)
-    if (!isNaN(d.getTime()) && d.getFullYear() > 2000) return d.toISOString()
+    if (isPlausiblePostedDate(d)) return d.toISOString()
   }
   return null
 }
@@ -303,7 +374,13 @@ function parseAd(ad: IkmanAd, area: string, categorySlug: string): Partial<Listi
 
   const contact     = ad.contact?.chat_phone_number ?? ad.contact?.phone ?? null
   const description = ad.description ?? null
-  const posted_at = parsePostedAt(ad.postedDate, ad.adDate, ad.posted_at, ad.created_at)
+  const posted_at = parsePostedAt(
+    ad.adDate,
+    ad.timeStamp,
+    ad.lastBumpUpDate,
+    ad.posted_at,
+    ad.created_at,
+  )
 
   return {
     ikman_id: ikmanId,
@@ -407,7 +484,13 @@ async function scrapeDetailPage(
       ad.contact?.phone ??
       null
     const description = ad.description?.slice(0, 1000) ?? null
-    const posted_at = parsePostedAt(ad.postedDate, ad.adDate, ad.posted_at, ad.created_at)
+    const posted_at = parsePostedAt(
+    ad.adDate,
+    ad.timeStamp,
+    ad.lastBumpUpDate,
+    ad.posted_at,
+    ad.created_at,
+  )
 
     return { description, contact, photos, posted_at }
   } catch (err) {

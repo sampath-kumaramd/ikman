@@ -79,6 +79,17 @@ async function main() {
   const fromNumber  = process.env.TWILIO_FROM_NUMBER   ?? ''
   const toNumber    = process.env.WHATSAPP_NUMBER ?? settings.whatsapp_number
   const twilioReady = !!(accountSid && authToken && fromNumber && toNumber)
+  if (!twilioReady) {
+    const missing = [
+      !accountSid && 'TWILIO_ACCOUNT_SID',
+      !authToken && 'TWILIO_AUTH_TOKEN',
+      !fromNumber && 'TWILIO_FROM_NUMBER',
+      !toNumber && 'WHATSAPP_NUMBER',
+    ].filter(Boolean)
+    console.warn(
+      `WhatsApp skipped — add to .env (or GitHub secrets): ${missing.join(', ')}`,
+    )
+  }
 
   for (const listing of saved) {
     let whatsappSent = false
@@ -91,7 +102,9 @@ async function main() {
     }
 
     await createNotification(db, listing.id, whatsappSent)
-    console.log(`Saved & notified: ${listing.title}`)
+    console.log(
+      `Saved: ${listing.title}${whatsappSent ? ' (WhatsApp sent)' : ' (no WhatsApp — check Twilio env)'}`,
+    )
   }
 
   console.log(`Done. Processed ${saved.length} new listings.`)
