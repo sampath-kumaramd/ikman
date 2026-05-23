@@ -3,14 +3,32 @@ import type { AppSettings, Listing, ListingFilters, Notification } from './types
 
 // ── Settings ──────────────────────────────────────────────────────────────────
 
+const DEFAULT_AREAS = ['Moratuwa', 'Ratmalana', 'Mount Lavinia', 'Dehiwala']
+const DEFAULT_LISTING_TYPES: AppSettings['listing_types'] = ['apartment', 'annex', 'house']
+
+function asStringArray(val: unknown, fallback: string[]): string[] {
+  if (Array.isArray(val)) return val.filter((x): x is string => typeof x === 'string')
+  if (typeof val === 'string' && val.trim()) return [val.trim()]
+  return fallback
+}
+
+function asListingTypes(val: unknown): AppSettings['listing_types'] {
+  const allowed = new Set(DEFAULT_LISTING_TYPES)
+  const list = asStringArray(val, []).filter(
+    (t): t is AppSettings['listing_types'][number] =>
+      allowed.has(t as AppSettings['listing_types'][number]),
+  )
+  return list.length ? list : DEFAULT_LISTING_TYPES
+}
+
 export async function getSettings(client: SupabaseClient): Promise<AppSettings> {
   const { data, error } = await client.from('settings').select('key, value')
   if (error) throw error
 
   const map = Object.fromEntries(data.map((r: { key: string; value: unknown }) => [r.key, r.value]))
   return {
-    areas:                    (map.areas                   as string[])  ?? ['Moratuwa', 'Ratmalana', 'Mount Lavinia', 'Dehiwala'],
-    listing_types:            (map.listing_types           as AppSettings['listing_types']) ?? ['apartment', 'annex', 'house'],
+    areas:                    asStringArray(map.areas, DEFAULT_AREAS),
+    listing_types:            asListingTypes(map.listing_types),
     max_price:                Number(map.max_price)        || 75000,
     min_bedrooms:             Number(map.min_bedrooms)     || 1,
     max_bedrooms:             Number(map.max_bedrooms)     || 2,

@@ -1,20 +1,22 @@
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { SettingsForm } from '@/components/SettingsForm'
+import { buttonVariants } from '@/components/ui/button'
 
 export default function SettingsPage() {
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center gap-3">
         <Link
           href="/"
-          className="p-2 rounded-xl hover:bg-gray-100 transition-colors text-gray-500"
+          aria-label="Back to dashboard"
+          className={buttonVariants({ variant: 'ghost', size: 'icon' })}
         >
           <ArrowLeft size={20} />
         </Link>
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Settings</h1>
-          <p className="text-sm text-gray-500">Configure your rental search preferences</p>
+          <h1 className="text-xl font-bold">Settings</h1>
+          <p className="text-sm text-muted-foreground">Configure your rental search preferences</p>
         </div>
       </div>
 

@@ -1,14 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { ExternalLink, Phone, MapPin, BedDouble, Calendar, Tag } from 'lucide-react'
+import { ExternalLink, Phone, MapPin, BedDouble, Calendar } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { buttonVariants } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import type { Listing } from '@/lib/types'
 
-const TYPE_COLORS: Record<string, string> = {
-  apartment: 'bg-blue-100 text-blue-800',
-  house:     'bg-green-100 text-green-800',
-  annex:     'bg-purple-100 text-purple-800',
+const TYPE_VARIANTS: Record<string, 'default' | 'secondary' | 'outline'> = {
+  apartment: 'default',
+  house:     'secondary',
+  annex:     'outline',
 }
 
 export function ListingCard({ listing }: { listing: Listing }) {
@@ -22,16 +26,14 @@ export function ListingCard({ listing }: { listing: Listing }) {
     : null
 
   return (
-    <div className="relative bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-200">
-      {/* NEW badge */}
-      {listing.is_new && (
-        <span className="absolute top-3 left-3 z-10 bg-orange-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
-          NEW
-        </span>
-      )}
-
+    <Card className="overflow-hidden gap-0 py-0 hover:shadow-lg transition-shadow duration-200">
       {/* Photo */}
-      <div className="h-44 bg-gray-100 overflow-hidden">
+      <div className="relative h-44 bg-muted overflow-hidden">
+        {listing.is_new && (
+          <Badge className="absolute top-3 left-3 z-10 bg-orange-500 text-white hover:bg-orange-500">
+            NEW
+          </Badge>
+        )}
         {photo ? (
           <img
             src={photo}
@@ -40,58 +42,60 @@ export function ListingCard({ listing }: { listing: Listing }) {
             onError={() => setImgError(true)}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-300">
+          <div className="w-full h-full flex items-center justify-center text-muted-foreground/30">
             <BedDouble size={40} />
           </div>
         )}
       </div>
 
-      {/* Body */}
-      <div className="p-4 space-y-3">
+      <CardContent className="p-4 space-y-3">
         {/* Price + type badge */}
         <div className="flex items-start justify-between gap-2">
-          <span className="text-xl font-bold text-gray-900">
-            {listing.price ? `Rs. ${listing.price.toLocaleString()}` : 'Price on request'}
-            <span className="text-sm font-normal text-gray-500">/mo</span>
-          </span>
+          <div>
+            <span className="text-xl font-bold text-foreground">
+              {listing.price ? `Rs. ${listing.price.toLocaleString()}` : 'Price on request'}
+            </span>
+            {listing.price && (
+              <span className="text-sm font-normal text-muted-foreground">/mo</span>
+            )}
+          </div>
           {listing.listing_type && (
-            <span
-              className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize shrink-0 ${
-                TYPE_COLORS[listing.listing_type] ?? 'bg-gray-100 text-gray-700'
-              }`}
+            <Badge
+              variant={TYPE_VARIANTS[listing.listing_type] ?? 'outline'}
+              className="capitalize shrink-0 mt-0.5"
             >
               {listing.listing_type}
-            </span>
+            </Badge>
           )}
         </div>
 
         {/* Title */}
-        <p className="text-sm font-medium text-gray-800 line-clamp-2 leading-snug">
+        <p className="text-sm font-medium text-foreground line-clamp-2 leading-snug">
           {listing.title ?? 'Untitled listing'}
         </p>
 
         {/* Meta row */}
-        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
+        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
           {listing.location && (
             <span className="flex items-center gap-1">
-              <MapPin size={12} /> {listing.location}
+              <MapPin size={11} /> {listing.location}
             </span>
           )}
           {listing.bedrooms && (
             <span className="flex items-center gap-1">
-              <BedDouble size={12} /> {listing.bedrooms} BR
+              <BedDouble size={11} /> {listing.bedrooms} BR
             </span>
           )}
           {postedAgo && (
             <span className="flex items-center gap-1">
-              <Calendar size={12} /> {postedAgo}
+              <Calendar size={11} /> {postedAgo}
             </span>
           )}
         </div>
 
         {/* Description */}
         {listing.description && (
-          <p className="text-xs text-gray-500 line-clamp-2">{listing.description}</p>
+          <p className="text-xs text-muted-foreground line-clamp-2">{listing.description}</p>
         )}
 
         {/* Actions */}
@@ -99,7 +103,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
           {listing.contact && (
             <a
               href={`tel:${listing.contact}`}
-              className="flex items-center gap-1.5 text-xs bg-green-50 text-green-700 hover:bg-green-100 px-3 py-1.5 rounded-lg font-medium transition-colors"
+              className={cn(buttonVariants({ variant: 'secondary', size: 'sm' }), 'text-green-700 bg-green-50 hover:bg-green-100')}
             >
               <Phone size={12} /> {listing.contact}
             </a>
@@ -108,12 +112,12 @@ export function ListingCard({ listing }: { listing: Listing }) {
             href={listing.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 px-3 py-1.5 rounded-lg font-medium transition-colors ml-auto"
+            className={cn(buttonVariants({ variant: 'secondary', size: 'sm' }), 'ml-auto')}
           >
             View on ikman <ExternalLink size={12} />
           </a>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }

@@ -4,18 +4,14 @@ import { useCallback, useEffect, useState } from 'react'
 import { RefreshCw, Loader2, Home, Building2, LayoutGrid } from 'lucide-react'
 import { ListingCard } from '@/components/ListingCard'
 import { FilterBar } from '@/components/FilterBar'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import type { Listing, ListingFilters } from '@/lib/types'
 
 const DEFAULT_FILTERS: ListingFilters = {
   sort: 'date_desc',
   page: 1,
   limit: 20,
-}
-
-const STAT_ICONS = {
-  total:     <LayoutGrid size={18} className="text-blue-500" />,
-  new:       <Home size={18} className="text-orange-500" />,
-  areas:     <Building2 size={18} className="text-green-500" />,
 }
 
 export default function DashboardPage() {
@@ -44,7 +40,6 @@ export default function DashboardPage() {
     }
   }, [])
 
-  // Fetch new count (for stats)
   useEffect(() => {
     fetch('/api/listings?is_new=true&limit=1')
       .then((r) => r.json())
@@ -52,7 +47,6 @@ export default function DashboardPage() {
       .catch(() => {})
   }, [listings])
 
-  // Load areas from settings
   useEffect(() => {
     fetch('/api/settings')
       .then((r) => r.json())
@@ -81,40 +75,42 @@ export default function DashboardPage() {
 
   const totalPages = Math.ceil(total / (filters.limit ?? 20))
 
+  const stats = [
+    { label: 'Total listings', value: total,        icon: <LayoutGrid size={16} className="text-primary" /> },
+    { label: 'New',            value: newCount,      icon: <Home size={16} className="text-orange-500" /> },
+    { label: 'Areas tracked',  value: areas.length,  icon: <Building2 size={16} className="text-green-500" /> },
+  ]
+
   return (
-    <div className="space-y-6">
-      {/* Stats + Run Now */}
-      <div className="flex flex-wrap items-center gap-4">
-        <div className="flex gap-3">
-          {[
-            { label: 'Total listings', value: total,    icon: STAT_ICONS.total   },
-            { label: 'New',            value: newCount,  icon: STAT_ICONS.new     },
-            { label: 'Areas',          value: areas.length, icon: STAT_ICONS.areas },
-          ].map((s) => (
-            <div
-              key={s.label}
-              className="flex items-center gap-2 bg-white border border-gray-100 rounded-xl px-4 py-2.5 shadow-sm"
-            >
-              {s.icon}
-              <div>
-                <div className="text-lg font-bold text-gray-900 leading-none">{s.value}</div>
-                <div className="text-xs text-gray-400 mt-0.5">{s.label}</div>
-              </div>
-            </div>
+    <div className="space-y-5">
+      {/* Stats row + Run Now */}
+      <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+        {/* Stat cards */}
+        <div className="flex gap-3 flex-wrap flex-1">
+          {stats.map((s) => (
+            <Card key={s.label} className="flex-1 min-w-[100px] py-3 gap-0">
+              <CardContent className="px-4 flex items-center gap-3">
+                <div className="shrink-0">{s.icon}</div>
+                <div>
+                  <div className="text-xl font-bold leading-none">{s.value}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">{s.label}</div>
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
 
-        <div className="ml-auto flex flex-col items-end gap-1">
-          <button
-            onClick={triggerScrape}
-            disabled={triggering}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors shadow-sm"
-          >
-            {triggering ? <Loader2 size={15} className="animate-spin" /> : <RefreshCw size={15} />}
+        {/* Run Now */}
+        <div className="flex flex-col items-end gap-1 shrink-0">
+          <Button onClick={triggerScrape} disabled={triggering} size="default">
+            {triggering
+              ? <Loader2 size={15} className="animate-spin" />
+              : <RefreshCw size={15} />
+            }
             Run Now
-          </button>
+          </Button>
           {triggerMsg && (
-            <span className="text-xs text-gray-500 text-right max-w-xs">{triggerMsg}</span>
+            <span className="text-xs text-muted-foreground text-right max-w-xs">{triggerMsg}</span>
           )}
         </div>
       </div>
@@ -125,10 +121,10 @@ export default function DashboardPage() {
       {/* Listings */}
       {loading ? (
         <div className="flex items-center justify-center py-24">
-          <Loader2 size={32} className="animate-spin text-gray-300" />
+          <Loader2 size={32} className="animate-spin text-muted-foreground/30" />
         </div>
       ) : listings.length === 0 ? (
-        <div className="text-center py-24 text-gray-400 space-y-2">
+        <div className="text-center py-24 text-muted-foreground space-y-2">
           <div className="text-4xl">🏚️</div>
           <p className="font-medium">No listings found</p>
           <p className="text-sm">Try adjusting your filters or run a scrape.</p>
@@ -143,24 +139,26 @@ export default function DashboardPage() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 pt-4">
-          <button
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setFilters((f) => ({ ...f, page: Math.max(1, (f.page ?? 1) - 1) }))}
             disabled={(filters.page ?? 1) <= 1}
-            className="px-4 py-2 text-sm rounded-lg border border-gray-200 hover:bg-gray-100 disabled:opacity-40 transition-colors"
           >
             Previous
-          </button>
-          <span className="text-sm text-gray-500">
+          </Button>
+          <span className="text-sm text-muted-foreground">
             Page {filters.page ?? 1} of {totalPages}
           </span>
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setFilters((f) => ({ ...f, page: Math.min(totalPages, (f.page ?? 1) + 1) }))}
             disabled={(filters.page ?? 1) >= totalPages}
-            className="px-4 py-2 text-sm rounded-lg border border-gray-200 hover:bg-gray-100 disabled:opacity-40 transition-colors"
           >
             Next
-          </button>
+          </Button>
         </div>
       )}
     </div>

@@ -3,6 +3,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Bell } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Separator } from '@/components/ui/separator'
 import type { Notification } from '@/lib/types'
 
 export function NotificationBell() {
@@ -23,11 +27,10 @@ export function NotificationBell() {
 
   useEffect(() => {
     load()
-    const id = setInterval(load, 60_000) // refresh every minute
+    const id = setInterval(load, 60_000)
     return () => clearInterval(id)
   }, [])
 
-  // Close on outside click
   useEffect(() => {
     function handler(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
@@ -38,63 +41,69 @@ export function NotificationBell() {
 
   return (
     <div className="relative" ref={ref}>
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={() => setOpen((o) => !o)}
-        className="relative p-2 rounded-xl hover:bg-gray-100 transition-colors"
         aria-label="Notifications"
+        className="relative"
       >
-        <Bell size={22} className="text-gray-600" />
+        <Bell size={20} />
         {notifications.length > 0 && (
-          <span className="absolute top-1 right-1 bg-orange-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+          <Badge className="absolute -top-0.5 -right-0.5 h-4 w-4 min-w-0 p-0 flex items-center justify-center text-[10px] bg-orange-500 hover:bg-orange-500">
             {notifications.length > 9 ? '9+' : notifications.length}
-          </span>
+          </Badge>
         )}
-      </button>
+      </Button>
 
       {open && (
-        <div className="absolute right-0 top-12 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-            <span className="font-semibold text-sm text-gray-800">
-              {notifications.length > 0 ? `${notifications.length} new listings` : 'No new listings'}
+        <div className="absolute right-0 top-11 w-80 bg-popover rounded-xl shadow-xl border border-border z-50 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3">
+            <span className="font-semibold text-sm">
+              {notifications.length > 0 ? `${notifications.length} new listings` : 'Notifications'}
             </span>
             {notifications.length > 0 && (
-              <button
-                onClick={markAllRead}
-                className="text-xs text-blue-600 hover:text-blue-800 font-medium"
-              >
+              <Button variant="ghost" size="sm" onClick={markAllRead} className="h-7 text-xs">
                 Mark all read
-              </button>
+              </Button>
             )}
           </div>
+          <Separator />
 
-          <div className="max-h-80 overflow-y-auto">
+          <ScrollArea className="max-h-80">
             {notifications.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-8">You&apos;re all caught up!</p>
+              <p className="text-sm text-muted-foreground text-center py-8">
+                You&apos;re all caught up!
+              </p>
             ) : (
-              notifications.map((n) => (
-                <a
-                  key={n.id}
-                  href={n.listing?.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex flex-col gap-0.5 px-4 py-3 hover:bg-gray-50 border-b border-gray-50 last:border-0"
-                >
-                  <span className="text-sm font-medium text-gray-800 line-clamp-1">
-                    {n.listing?.title ?? 'New listing'}
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    {n.listing?.price ? `Rs. ${n.listing.price.toLocaleString()}/mo · ` : ''}
-                    {n.listing?.area ?? ''}
-                    {n.listing?.bedrooms ? ` · ${n.listing.bedrooms} BR` : ''}
-                  </span>
-                  <span className="text-[11px] text-gray-400 mt-0.5">
-                    {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
-                    {n.whatsapp_sent && ' · 📱 WhatsApp sent'}
-                  </span>
-                </a>
-              ))
+              <div>
+                {notifications.map((n, i) => (
+                  <div key={n.id}>
+                    <a
+                      href={n.listing?.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex flex-col gap-0.5 px-4 py-3 hover:bg-muted/50 transition-colors"
+                    >
+                      <span className="text-sm font-medium line-clamp-1">
+                        {n.listing?.title ?? 'New listing'}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {n.listing?.price ? `Rs. ${n.listing.price.toLocaleString()}/mo · ` : ''}
+                        {n.listing?.area ?? ''}
+                        {n.listing?.bedrooms ? ` · ${n.listing.bedrooms} BR` : ''}
+                      </span>
+                      <span className="text-[11px] text-muted-foreground/70 mt-0.5">
+                        {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
+                        {n.whatsapp_sent && ' · 📱 WhatsApp sent'}
+                      </span>
+                    </a>
+                    {i < notifications.length - 1 && <Separator />}
+                  </div>
+                ))}
+              </div>
             )}
-          </div>
+          </ScrollArea>
         </div>
       )}
     </div>

@@ -1,7 +1,21 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Save, Loader2 } from 'lucide-react'
+import { Save, Loader2, X, Plus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Switch } from '@/components/ui/switch'
+import { Slider } from '@/components/ui/slider'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Separator } from '@/components/ui/separator'
 import type { AppSettings } from '@/lib/types'
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -21,6 +35,22 @@ const AVAILABLE_AREAS = [
 ]
 const LISTING_TYPE_OPTIONS = ['apartment', 'annex', 'house'] as const
 
+function normalizeSettings(data: unknown): AppSettings {
+  if (!data || typeof data !== 'object' || 'error' in data) return DEFAULT_SETTINGS
+  const d = data as Partial<AppSettings>
+  return {
+    areas: Array.isArray(d.areas) ? d.areas : DEFAULT_SETTINGS.areas,
+    listing_types: Array.isArray(d.listing_types) ? d.listing_types : DEFAULT_SETTINGS.listing_types,
+    max_price: Number(d.max_price) || DEFAULT_SETTINGS.max_price,
+    min_bedrooms: Number(d.min_bedrooms) || DEFAULT_SETTINGS.min_bedrooms,
+    max_bedrooms: Number(d.max_bedrooms) || DEFAULT_SETTINGS.max_bedrooms,
+    scrape_interval_minutes:
+      Number(d.scrape_interval_minutes) || DEFAULT_SETTINGS.scrape_interval_minutes,
+    whatsapp_number: typeof d.whatsapp_number === 'string' ? d.whatsapp_number : '',
+    notifications_enabled: d.notifications_enabled ?? DEFAULT_SETTINGS.notifications_enabled,
+  }
+}
+
 export function SettingsForm() {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS)
   const [loading, setLoading] = useState(true)
@@ -31,8 +61,9 @@ export function SettingsForm() {
   useEffect(() => {
     fetch('/api/settings')
       .then((r) => r.json())
-      .then((data) => { setSettings(data); setLoading(false) })
-      .catch(() => setLoading(false))
+      .then((data) => setSettings(normalizeSettings(data)))
+      .catch(() => setSettings(DEFAULT_SETTINGS))
+      .finally(() => setLoading(false))
   }, [])
 
   async function handleSave(e: React.FormEvent) {
@@ -54,207 +85,261 @@ export function SettingsForm() {
   }
 
   function toggleArea(area: string) {
-    setSettings((s) => ({
-      ...s,
-      areas: s.areas.includes(area)
-        ? s.areas.filter((a) => a !== area)
-        : [...s.areas, area],
-    }))
+    setSettings((s) => {
+      const areas = s.areas ?? []
+      return {
+        ...s,
+        areas: areas.includes(area)
+          ? areas.filter((a) => a !== area)
+          : [...areas, area],
+      }
+    })
   }
 
   function toggleType(type: typeof LISTING_TYPE_OPTIONS[number]) {
-    setSettings((s) => ({
-      ...s,
-      listing_types: s.listing_types.includes(type)
-        ? s.listing_types.filter((t) => t !== type)
-        : [...s.listing_types, type],
-    }))
+    setSettings((s) => {
+      const listing_types = s.listing_types ?? []
+      return {
+        ...s,
+        listing_types: listing_types.includes(type)
+          ? listing_types.filter((t) => t !== type)
+          : [...listing_types, type],
+      }
+    })
   }
 
   function addCustomArea() {
     const trimmed = customArea.trim()
-    if (trimmed && !settings.areas.includes(trimmed)) {
-      setSettings((s) => ({ ...s, areas: [...s.areas, trimmed] }))
+    const areas = settings.areas ?? []
+    if (trimmed && !areas.includes(trimmed)) {
+      setSettings((s) => ({ ...s, areas: [...(s.areas ?? []), trimmed] }))
     }
     setCustomArea('')
   }
 
-  if (loading) return <div className="text-center py-16 text-gray-400">Loading settings…</div>
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-16 text-muted-foreground">
+        <Loader2 size={20} className="animate-spin mr-2" /> Loading settings…
+      </div>
+    )
+  }
 
   return (
-    <form onSubmit={handleSave} className="space-y-8 max-w-2xl">
+    <form onSubmit={handleSave} className="space-y-6 max-w-2xl">
       {/* Areas */}
-      <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
-        <h2 className="font-semibold text-gray-800">Search Areas</h2>
-        <div className="flex flex-wrap gap-2">
-          {AVAILABLE_AREAS.map((area) => (
-            <button
-              key={area}
-              type="button"
-              onClick={() => toggleArea(area)}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                settings.areas.includes(area)
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {area}
-            </button>
-          ))}
-        </div>
-        {/* Custom area */}
-        <div className="flex gap-2">
-          <input
-            type="text"
-            placeholder="Add custom area…"
-            value={customArea}
-            onChange={(e) => setCustomArea(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomArea())}
-            className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
-          />
-          <button
-            type="button"
-            onClick={addCustomArea}
-            className="text-sm px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-          >
-            Add
-          </button>
-        </div>
-        {/* Custom areas chips */}
-        {settings.areas.filter((a) => !AVAILABLE_AREAS.includes(a)).map((area) => (
-          <span key={area} className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm">
-            {area}
-            <button type="button" onClick={() => toggleArea(area)} className="ml-1 text-blue-400 hover:text-blue-700">×</button>
-          </span>
-        ))}
-      </section>
+      <Card>
+        <CardHeader>
+          <CardTitle>Search Areas</CardTitle>
+          <CardDescription>Select the areas you want to track for rental listings.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            {AVAILABLE_AREAS.map((area) => (
+              <Button
+                key={area}
+                type="button"
+                variant={(settings.areas ?? []).includes(area) ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => toggleArea(area)}
+              >
+                {area}
+              </Button>
+            ))}
+          </div>
 
-      {/* Listing types */}
-      <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
-        <h2 className="font-semibold text-gray-800">Property Types</h2>
-        <div className="flex gap-3">
-          {LISTING_TYPE_OPTIONS.map((type) => (
-            <button
-              key={type}
-              type="button"
-              onClick={() => toggleType(type)}
-              className={`px-4 py-2 rounded-xl text-sm font-medium capitalize transition-colors ${
-                settings.listing_types.includes(type)
-                  ? 'bg-green-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {type}
-            </button>
-          ))}
-        </div>
-      </section>
+          {/* Custom areas */}
+          {(settings.areas ?? []).filter((a) => !AVAILABLE_AREAS.includes(a)).length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {(settings.areas ?? []).filter((a) => !AVAILABLE_AREAS.includes(a)).map((area) => (
+                <Badge key={area} variant="secondary" className="gap-1 pr-1">
+                  {area}
+                  <button
+                    type="button"
+                    onClick={() => toggleArea(area)}
+                    className="ml-0.5 rounded-full hover:bg-muted-foreground/20 p-0.5"
+                  >
+                    <X size={10} />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            <Input
+              placeholder="Add custom area…"
+              value={customArea}
+              onChange={(e) => setCustomArea(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomArea())}
+              className="flex-1"
+            />
+            <Button type="button" variant="outline" onClick={addCustomArea}>
+              <Plus size={15} /> Add
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Property Types */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Property Types</CardTitle>
+          <CardDescription>Choose which property types to include in results.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            {LISTING_TYPE_OPTIONS.map((type) => (
+              <Button
+                key={type}
+                type="button"
+                variant={(settings.listing_types ?? []).includes(type) ? 'default' : 'outline'}
+                size="sm"
+                className="capitalize"
+                onClick={() => toggleType(type)}
+              >
+                {type}
+              </Button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Price & Bedrooms */}
-      <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
-        <h2 className="font-semibold text-gray-800">Price & Bedrooms</h2>
+      <Card>
+        <CardHeader>
+          <CardTitle>Price & Bedrooms</CardTitle>
+          <CardDescription>Set your budget and bedroom preferences.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <label className="text-sm font-medium">Max rent</label>
+              <span className="text-sm font-bold text-primary">
+                Rs. {settings.max_price.toLocaleString()}
+              </span>
+            </div>
+            <Slider
+              min={10000}
+              max={200000}
+              step={5000}
+              value={[settings.max_price]}
+              onValueChange={(val) => {
+                const v = Array.isArray(val) ? val[0] : val
+                setSettings((s) => ({ ...s, max_price: v as number }))
+              }}
+            />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>Rs. 10,000</span><span>Rs. 200,000</span>
+            </div>
+          </div>
 
-        <div className="space-y-2">
-          <label className="text-sm text-gray-600">
-            Max rent: <strong>Rs. {settings.max_price.toLocaleString()}</strong>
-          </label>
-          <input
-            type="range" min={10000} max={200000} step={5000}
-            value={settings.max_price}
-            onChange={(e) => setSettings((s) => ({ ...s, max_price: Number(e.target.value) }))}
-            className="w-full accent-blue-600"
-          />
-          <div className="flex justify-between text-xs text-gray-400">
-            <span>Rs. 10,000</span><span>Rs. 200,000</span>
-          </div>
-        </div>
+          <Separator />
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <label className="text-sm text-gray-600">Min bedrooms</label>
-            <select
-              value={settings.min_bedrooms}
-              onChange={(e) => setSettings((s) => ({ ...s, min_bedrooms: Number(e.target.value) }))}
-              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
-            >
-              <option value={1}>1</option>
-              <option value={2}>2</option>
-              <option value={3}>3</option>
-            </select>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Min bedrooms</label>
+              <Select
+                value={String(settings.min_bedrooms)}
+                onValueChange={(val) => setSettings((s) => ({ ...s, min_bedrooms: Number(val) }))}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1</SelectItem>
+                  <SelectItem value="2">2</SelectItem>
+                  <SelectItem value="3">3</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Max bedrooms</label>
+              <Select
+                value={String(settings.max_bedrooms)}
+                onValueChange={(val) => setSettings((s) => ({ ...s, max_bedrooms: Number(val) }))}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1</SelectItem>
+                  <SelectItem value="2">2</SelectItem>
+                  <SelectItem value="3">3</SelectItem>
+                  <SelectItem value="4">4</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div className="space-y-1">
-            <label className="text-sm text-gray-600">Max bedrooms</label>
-            <select
-              value={settings.max_bedrooms}
-              onChange={(e) => setSettings((s) => ({ ...s, max_bedrooms: Number(e.target.value) }))}
-              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
-            >
-              <option value={1}>1</option>
-              <option value={2}>2</option>
-              <option value={3}>3</option>
-              <option value={4}>4</option>
-            </select>
-          </div>
-        </div>
-      </section>
+        </CardContent>
+      </Card>
 
       {/* Notifications */}
-      <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
-        <h2 className="font-semibold text-gray-800">Notifications</h2>
-
-        <label className="flex items-center gap-3 cursor-pointer">
-          <div
-            onClick={() => setSettings((s) => ({ ...s, notifications_enabled: !s.notifications_enabled }))}
-            className={`relative w-11 h-6 rounded-full transition-colors ${
-              settings.notifications_enabled ? 'bg-blue-600' : 'bg-gray-200'
-            }`}
-          >
-            <div
-              className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                settings.notifications_enabled ? 'translate-x-5' : ''
-              }`}
+      <Card>
+        <CardHeader>
+          <CardTitle>Notifications</CardTitle>
+          <CardDescription>Configure WhatsApp alerts and scraping frequency.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">Enable notifications</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Get alerted when new listings match your criteria
+              </p>
+            </div>
+            <Switch
+              checked={settings.notifications_enabled}
+              onCheckedChange={(checked) =>
+                setSettings((s) => ({ ...s, notifications_enabled: checked }))
+              }
             />
           </div>
-          <span className="text-sm text-gray-700">Enable notifications</span>
-        </label>
 
-        <div className="space-y-1">
-          <label className="text-sm text-gray-600">WhatsApp number</label>
-          <input
-            type="tel"
-            placeholder="+94760937443"
-            value={settings.whatsapp_number}
-            onChange={(e) => setSettings((s) => ({ ...s, whatsapp_number: e.target.value }))}
-            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
-          />
-          <p className="text-xs text-gray-400">Format: +94XXXXXXXXX</p>
-        </div>
+          <Separator />
 
-        <div className="space-y-1">
-          <label className="text-sm text-gray-600">
-            Scrape interval: <strong>{settings.scrape_interval_minutes} minutes</strong>
-          </label>
-          <input
-            type="range" min={15} max={240} step={15}
-            value={settings.scrape_interval_minutes}
-            onChange={(e) => setSettings((s) => ({ ...s, scrape_interval_minutes: Number(e.target.value) }))}
-            className="w-full accent-blue-600"
-          />
-          <div className="flex justify-between text-xs text-gray-400">
-            <span>15 min</span><span>4 hours</span>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">WhatsApp number</label>
+            <Input
+              type="tel"
+              placeholder="+94760937443"
+              value={settings.whatsapp_number}
+              onChange={(e) => setSettings((s) => ({ ...s, whatsapp_number: e.target.value }))}
+            />
+            <p className="text-xs text-muted-foreground">Format: +94XXXXXXXXX</p>
           </div>
-        </div>
-      </section>
+
+          <Separator />
+
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <label className="text-sm font-medium">Scrape interval</label>
+              <span className="text-sm font-bold text-primary">
+                {settings.scrape_interval_minutes} min
+              </span>
+            </div>
+            <Slider
+              min={15}
+              max={240}
+              step={15}
+              value={[settings.scrape_interval_minutes]}
+              onValueChange={(val) => {
+                const v = Array.isArray(val) ? val[0] : val
+                setSettings((s) => ({ ...s, scrape_interval_minutes: v as number }))
+              }}
+            />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>15 min</span><span>4 hours</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Save */}
-      <button
-        type="submit"
-        disabled={saving}
-        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
-      >
+      <Button type="submit" disabled={saving} size="lg" className="w-full sm:w-auto">
         {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
         {saved ? 'Saved!' : 'Save settings'}
-      </button>
+      </Button>
     </form>
   )
 }

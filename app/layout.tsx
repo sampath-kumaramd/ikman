@@ -3,6 +3,7 @@ import { Geist } from 'next/font/google'
 import Link from 'next/link'
 import { Settings } from 'lucide-react'
 import { NotificationBell } from '@/components/NotificationBell'
+import { buttonVariants } from '@/components/ui/button'
 import './globals.css'
 
 const geist = Geist({ subsets: ['latin'] })
@@ -15,13 +16,13 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${geist.className} bg-gray-50 min-h-screen`}>
-        <header className="sticky top-0 z-40 bg-white border-b border-gray-100 shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
+      <body className={`${geist.className} bg-muted/30 min-h-screen`}>
+        <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-md">
+          <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
+            <Link href="/" className="flex items-center gap-2 shrink-0">
               <span className="text-xl">🏠</span>
-              <span className="font-bold text-gray-900">Rental Tracker</span>
-              <span className="hidden sm:inline text-sm text-gray-400 font-normal ml-1">
+              <span className="font-bold text-foreground">Rental Tracker</span>
+              <span className="hidden sm:inline text-sm text-muted-foreground font-normal">
                 · Galle Road
               </span>
             </Link>
@@ -30,10 +31,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <NotificationBell />
               <Link
                 href="/settings"
-                className="p-2 rounded-xl hover:bg-gray-100 transition-colors"
                 aria-label="Settings"
+                className={buttonVariants({ variant: 'ghost', size: 'icon' })}
               >
-                <Settings size={22} className="text-gray-600" />
+                <Settings size={20} />
               </Link>
             </div>
           </div>
