@@ -20,6 +20,27 @@ const TYPE_SLUGS: Record<string, string> = {
 }
 
 const MAX_PAGES = 5 // cap at 5 pages (~125 ads) per category/area combo
+const DEFAULT_DETAIL_CONCURRENCY = 8
+
+async function runWithConcurrency<T>(
+  items: T[],
+  concurrency: number,
+  fn: (item: T, index: number) => Promise<void>,
+): Promise<void> {
+  if (!items.length) return
+  let next = 0
+  const workers = Array.from(
+    { length: Math.min(concurrency, items.length) },
+    async () => {
+      while (true) {
+        const i = next++
+        if (i >= items.length) break
+        await fn(items[i], i)
+      }
+    },
+  )
+  await Promise.all(workers)
+}
 
 export interface ScrapeConfig {
   areas: string[]
@@ -245,6 +266,45 @@ function extractDetailAd(data: Record<string, unknown>): IkmanAd | null {
   return legacy ?? null
 }
 
+/** Fetch phone + description from ad detail pages (parallel, with progress logs). */
+export async function enrichListingsWithDetails(
+  app: FirecrawlApp,
+  listings: Partial<Listing>[],
+  options?: { concurrency?: number },
+): Promise<void> {
+  const toFetch = listings.filter((l) => l.url && !l.contact)
+  const total = toFetch.length
+  if (!total) return
+
+  const fromEnv = parseInt(process.env.DETAIL_CONCURRENCY ?? '', 10)
+  const concurrency =
+    options?.concurrency ??
+    (Number.isFinite(fromEnv) && fromEnv > 0 ? fromEnv : DEFAULT_DETAIL_CONCURRENCY)
+
+  console.log(
+    `\nFetching contact/details for ${total} listings (${concurrency} at a time, ~${Math.ceil(total / concurrency) * 4}s estimated)...`,
+  )
+
+  let done = 0
+
+  await runWithConcurrency(toFetch, concurrency, async (listing, i) => {
+    const label = listing.title?.slice(0, 45) ?? listing.url
+    console.log(`  Detail ${i + 1}/${total}: ${label}`)
+
+    const detail = await scrapeDetailPage(app, listing.url!)
+    if (detail.description) listing.description = detail.description
+    if (detail.contact) listing.contact = detail.contact
+    if (detail.photos.length > (listing.photos?.length ?? 0)) {
+      listing.photos = detail.photos
+    }
+
+    done++
+    if (done % 10 === 0 || done === total) {
+      console.log(`  Progress: ${done}/${total} detail pages fetched`)
+    }
+  })
+}
+
 async function scrapeDetailPage(
   app: FirecrawlApp,
   url: string,
@@ -357,17 +417,6 @@ export async function runScraper(config: ScrapeConfig): Promise<Partial<Listing>
     return true
   })
 
-  const needsDetail = unique.filter((l) => !l.contact || !l.description)
-  console.log(`\nFetching details for ${needsDetail.length} listings...`)
-
-  for (const listing of needsDetail) {
-    if (!listing.url) continue
-    const detail = await scrapeDetailPage(app, listing.url)
-    if (detail.description) listing.description = detail.description
-    if (detail.contact)     listing.contact     = detail.contact
-    if (detail.photos.length > (listing.photos?.length ?? 0)) listing.photos = detail.photos
-    await new Promise((r) => setTimeout(r, 500))
-  }
-
+  // Detail pages are fetched in index.ts for *new* listings only (saves time on repeat runs)
   return unique
 }

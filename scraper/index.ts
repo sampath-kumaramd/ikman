@@ -7,7 +7,8 @@
  */
 
 import { createClient } from '@supabase/supabase-js'
-import { runScraper } from './scraper'
+import FirecrawlApp from '@mendable/firecrawl-js'
+import { runScraper, enrichListingsWithDetails } from './scraper'
 import { sendWhatsApp, buildListingMessage } from './whatsapp'
 import { getSettings, upsertListings, getExistingIkmanIds, createNotification } from '../lib/db'
 import type { Listing } from '../lib/types'
@@ -63,6 +64,9 @@ async function main() {
     console.log('No new listings found.')
     return
   }
+
+  const app = new FirecrawlApp({ apiKey: firecrawlApiKey })
+  await enrichListingsWithDetails(app, newListings)
 
   const saved = await upsertListings(
     db,
