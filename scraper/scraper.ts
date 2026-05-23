@@ -1,4 +1,4 @@
-import FirecrawlApp from '@mendable/firecrawl-js'
+import { FirecrawlAppV1 as FirecrawlApp } from '@mendable/firecrawl-js'
 import type { Listing } from '../lib/types'
 
 const AREA_SLUGS: Record<string, string> = {
