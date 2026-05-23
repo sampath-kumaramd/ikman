@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { RotateCcw } from 'lucide-react'
 import type { ListingFilters } from '@/lib/types'
 
 interface FilterBarProps {
@@ -18,6 +19,7 @@ interface FilterBarProps {
 }
 
 const LISTING_TYPES = ['apartment', 'annex', 'house'] as const
+
 const SORT_OPTIONS = [
   { value: 'date_desc',  label: 'Newest first' },
   { value: 'date_asc',   label: 'Oldest first' },
@@ -25,13 +27,61 @@ const SORT_OPTIONS = [
   { value: 'price_desc', label: 'Price: high → low' },
 ] as const
 
+const BEDROOM_OPTIONS = [
+  { value: '1', label: '1 bedroom'  },
+  { value: '2', label: '2 bedrooms' },
+  { value: '3', label: '3 bedrooms' },
+  { value: '4', label: '4+ bedrooms' },
+] as const
+
+const STATUS_OPTIONS = [
+  { value: 'all',    label: 'All listings' },
+  { value: 'new',    label: 'New only'     },
+  { value: 'viewed', label: 'Viewed only'  },
+] as const
+
+const DEFAULT_MIN_PRICE = 10000
+const DEFAULT_MAX_PRICE = 150000
+
+const DEFAULT_FILTERS: ListingFilters = {
+  sort: 'date_desc',
+  page: 1,
+  limit: 20,
+}
+
+function statusFromFilters(filters: ListingFilters): string {
+  if (filters.is_new === true)  return 'new'
+  if (filters.is_new === false) return 'viewed'
+  return 'all'
+}
+
+function isNewFromStatus(status: string): boolean | undefined {
+  if (status === 'new')    return true
+  if (status === 'viewed') return false
+  return undefined
+}
+
 export function FilterBar({ filters, areas, onChange }: FilterBarProps) {
   const set = (patch: Partial<ListingFilters>) =>
     onChange({ ...filters, ...patch, page: 1 })
 
+  const minPrice = filters.min_price ?? DEFAULT_MIN_PRICE
+  const maxPrice = filters.max_price ?? DEFAULT_MAX_PRICE
+
+  const hasActiveFilters =
+    !!filters.area ||
+    !!filters.listing_type ||
+    !!filters.min_bedrooms ||
+    filters.is_new !== undefined ||
+    (filters.min_price ?? DEFAULT_MIN_PRICE) > DEFAULT_MIN_PRICE ||
+    (filters.max_price ?? DEFAULT_MAX_PRICE) < DEFAULT_MAX_PRICE
+
   return (
-    <div className="bg-card border border-border rounded-xl p-4 shadow-sm space-y-4">
+    <div className="bg-card border border-border rounded-xl p-4 shadow-sm space-y-5">
+
+      {/* ── Row 1: dropdowns ───────────────────────────────────────── */}
       <div className="flex flex-wrap gap-3 items-end">
+
         {/* Area */}
         <div className="flex flex-col gap-1.5 min-w-[140px] flex-1 sm:flex-none">
           <label className="text-xs font-medium text-muted-foreground">Area</label>
@@ -71,13 +121,18 @@ export function FilterBar({ filters, areas, onChange }: FilterBarProps) {
         </div>
 
         {/* Bedrooms */}
-        <div className="flex flex-col gap-1.5 min-w-[120px] flex-1 sm:flex-none">
+        <div className="flex flex-col gap-1.5 min-w-[130px] flex-1 sm:flex-none">
           <label className="text-xs font-medium text-muted-foreground">Bedrooms</label>
           <Select
             value={filters.min_bedrooms ? String(filters.min_bedrooms) : ''}
             onValueChange={(val) => {
-              const v = val ? Number(val) : undefined
-              set({ min_bedrooms: v, max_bedrooms: v })
+              if (!val) {
+                set({ min_bedrooms: undefined, max_bedrooms: undefined })
+              } else {
+                const n = Number(val)
+                // 4 means 4+ — set min to 4, no max cap
+                set({ min_bedrooms: n, max_bedrooms: n === 4 ? undefined : n })
+              }
             }}
           >
             <SelectTrigger className="w-full h-9">
@@ -85,23 +140,29 @@ export function FilterBar({ filters, areas, onChange }: FilterBarProps) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="">Any</SelectItem>
-              <SelectItem value="1">1 bedroom</SelectItem>
-              <SelectItem value="2">2 bedrooms</SelectItem>
+              {BEDROOM_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
 
-        {/* New only toggle */}
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-medium text-muted-foreground">Filter</label>
-          <Button
-            variant={filters.is_new ? 'default' : 'outline'}
-            size="sm"
-            className="h-9"
-            onClick={() => set({ is_new: filters.is_new ? undefined : true })}
+        {/* Status (All / New / Viewed) */}
+        <div className="flex flex-col gap-1.5 min-w-[140px] flex-1 sm:flex-none">
+          <label className="text-xs font-medium text-muted-foreground">Status</label>
+          <Select
+            value={statusFromFilters(filters)}
+            onValueChange={(val) => set({ is_new: isNewFromStatus(val) })}
           >
-            New only
-          </Button>
+            <SelectTrigger className="w-full h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Sort */}
@@ -123,24 +184,25 @@ export function FilterBar({ filters, areas, onChange }: FilterBarProps) {
         </div>
       </div>
 
-      {/* Max price slider — full width row */}
+      {/* ── Row 2: price range slider ──────────────────────────────── */}
       <div className="space-y-2">
         <div className="flex justify-between">
-          <label className="text-xs font-medium text-muted-foreground">
-            Max price
-          </label>
+          <label className="text-xs font-medium text-muted-foreground">Price range</label>
           <span className="text-xs font-semibold text-foreground">
-            Rs. {(filters.max_price ?? 75000).toLocaleString()}
+            Rs. {minPrice.toLocaleString()} — Rs. {maxPrice.toLocaleString()}
           </span>
         </div>
         <Slider
-          min={10000}
-          max={150000}
+          min={DEFAULT_MIN_PRICE}
+          max={DEFAULT_MAX_PRICE}
           step={5000}
-          value={[filters.max_price ?? 75000]}
-          onValueChange={(val) => {
-            const v = Array.isArray(val) ? val[0] : val
-            set({ max_price: v as number })
+          value={[minPrice, maxPrice]}
+          onValueChange={(vals) => {
+            const [lo, hi] = Array.isArray(vals) ? vals : [vals, vals]
+            set({
+              min_price: (lo as number) <= DEFAULT_MIN_PRICE ? undefined : lo as number,
+              max_price: (hi as number) >= DEFAULT_MAX_PRICE ? undefined : hi as number,
+            })
           }}
         />
         <div className="flex justify-between text-xs text-muted-foreground">
@@ -148,6 +210,22 @@ export function FilterBar({ filters, areas, onChange }: FilterBarProps) {
           <span>Rs. 150,000</span>
         </div>
       </div>
+
+      {/* ── Row 3: Reset ───────────────────────────────────────────── */}
+      {hasActiveFilters && (
+        <div className="flex justify-end pt-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground h-7 text-xs"
+            onClick={() => onChange({ ...DEFAULT_FILTERS, sort: filters.sort })}
+          >
+            <RotateCcw size={11} />
+            Reset filters
+          </Button>
+        </div>
+      )}
     </div>
   )
 }
