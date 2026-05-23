@@ -2,7 +2,7 @@
 
 Monitors ikman.lk for apartment, annex, and house rentals along Galle Road (Moratuwa, Ratmalana, Mount Lavinia, Dehiwala). Sends WhatsApp alerts for new listings and shows them in a web dashboard.
 
-**Stack:** Next.js 16 · Supabase (PostgreSQL) · Playwright · CallMeBot · GitHub Actions · Vercel
+**Stack:** Next.js 16 · Supabase (PostgreSQL) · Firecrawl · Twilio WhatsApp · GitHub Actions · Vercel
 
 ---
 
@@ -10,9 +10,9 @@ Monitors ikman.lk for apartment, annex, and house rentals along Galle Road (Mora
 
 ```
 GitHub Actions (every 30 min)
-  └── Playwright scrapes ikman.lk
+  └── Firecrawl scrapes ikman.lk (window.initialData)
   └── New listings → Supabase DB
-  └── WhatsApp alert via CallMeBot
+  └── WhatsApp alert via Twilio
 
 Vercel (Next.js)
   └── Dashboard shows listings from Supabase
@@ -29,14 +29,18 @@ Vercel (Next.js)
 1. Open your Supabase project → **SQL Editor**
 2. Paste and run the contents of [`supabase/schema.sql`](supabase/schema.sql)
 
-### 2. WhatsApp (CallMeBot) — free
+### 2. Firecrawl API key
 
-1. Add **+34 644 59 60 01** to your WhatsApp contacts (name it "CallMeBot")
-2. Send the message: `I allow callmebot to send me messages`
-3. You'll receive your **API key** in reply
-4. Save it as the `CALLMEBOT_API_KEY` GitHub secret (see Step 4)
+1. Sign up at [firecrawl.dev](https://www.firecrawl.dev) and create an API key
+2. Save it as the `FIRECRAWL_API_KEY` GitHub secret (see Step 4)
 
-### 3. GitHub Repository
+### 3. WhatsApp (Twilio)
+
+1. Create a [Twilio](https://www.twilio.com) account with WhatsApp enabled
+2. Note your Account SID, Auth Token, and WhatsApp-enabled sender number
+3. Add these as GitHub secrets (see Step 4)
+
+### 4. GitHub Repository
 
 Push this code to a GitHub repo:
 
@@ -48,7 +52,7 @@ git remote add origin https://github.com/YOUR_USERNAME/ikman.git
 git push -u origin main
 ```
 
-### 4. GitHub Actions Secrets
+### 5. GitHub Actions Secrets
 
 Go to: **GitHub repo → Settings → Secrets and variables → Actions → New repository secret**
 
@@ -56,10 +60,13 @@ Go to: **GitHub repo → Settings → Secrets and variables → Actions → New 
 |--------|-------|
 | `SUPABASE_URL` | Your Supabase project URL (e.g. `https://xxxx.supabase.co`) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (from Project Settings → API) |
-| `CALLMEBOT_API_KEY` | Your CallMeBot API key from Step 2 |
+| `FIRECRAWL_API_KEY` | Firecrawl API key from Step 2 |
+| `TWILIO_ACCOUNT_SID` | Twilio Account SID |
+| `TWILIO_AUTH_TOKEN` | Twilio Auth Token |
+| `TWILIO_FROM_NUMBER` | Twilio WhatsApp sender (e.g. `+14155238886`) |
 | `WHATSAPP_NUMBER` | Your number with country code: `+94760937443` |
 
-### 5. Vercel Deployment
+### 6. Vercel Deployment
 
 1. Import the repo at **vercel.com/new**
 2. Add these **Environment Variables** in Vercel:
@@ -75,19 +82,14 @@ Go to: **GitHub repo → Settings → Secrets and variables → Actions → New 
 
 3. Deploy — done!
 
-### 6. Local Development
+### 7. Local Development
 
 ```bash
-cp .env.local.example .env.local
-# Fill in the values in .env.local
+cp .env.local.example .env
+# Fill in the values in .env (or .env.local for Next.js)
 
 npm run dev        # Start Next.js at http://localhost:3000
-npm run scrape     # Run scraper manually (needs Playwright Chromium)
-```
-
-Install Playwright browser once:
-```bash
-npx playwright install chromium
+npm run scrape     # Run scraper manually (loads .env via --env-file)
 ```
 
 ---
@@ -141,8 +143,8 @@ lib/
   db.ts                 All database queries
 
 scraper/
-  scraper.ts            Playwright ikman.lk scraper
-  whatsapp.ts           CallMeBot notification helper
+  scraper.ts            Firecrawl ikman.lk scraper
+  whatsapp.ts           Twilio WhatsApp notification helper
   index.ts              Main entry point (run by GitHub Actions)
 
 supabase/

@@ -31,17 +31,92 @@ export interface ScrapeConfig {
 }
 
 interface IkmanAd {
+  id?:          string
   slug?:        string
   title?:       string
-  money?:       { price?: number }
+  details?:     string
+  price?:       string | number
+  location?:    string
+  imgUrl?:      string
+  images?:      IkmanImages
+  money?:       { price?: number; amount?: string }
   locations?:   { slug?: string; name?: string }[]
   thumbnails?:  { cdn_url?: string }[]
-  images?:      { cdn_url?: string }[]
   created_at?:  string
   posted_at?:   string
+  postedDate?:  string
+  timeStamp?:   string
+  lastBumpUpDate?: string
   contact?:     { chat_phone_number?: string; phone?: string }
+  contactCard?: { phoneNumbers?: { number?: string }[] }
   description?: string
   attributes?:  { name?: string; value?: string }[]
+  properties?:  { label?: string; value?: string; key?: string }[]
+}
+
+type IkmanImages =
+  | {
+      ids?:      string[]
+      base_uri?: string
+      meta?:     { src?: string }[]
+      cdn_url?:  string
+    }
+  | { cdn_url?: string }[]
+
+function isSerpImages(imgs: IkmanImages): imgs is { ids?: string[]; base_uri?: string; meta?: { src?: string }[] } {
+  return !Array.isArray(imgs)
+}
+
+function hasDetailMeta(imgs: IkmanImages): imgs is { meta: { src?: string }[] } {
+  return !Array.isArray(imgs) && Array.isArray((imgs as { meta?: unknown }).meta)
+}
+
+/** ikman RemoteData wrapper: { type: "Success", data: T } */
+function unwrapSuccessData<T extends Record<string, unknown>>(node: unknown): T | null {
+  if (!node || typeof node !== 'object') return null
+  const o = node as Record<string, unknown>
+  if (o.type === 'Success' && o.data && typeof o.data === 'object') {
+    return o.data as T
+  }
+  return null
+}
+
+function parsePrice(value: string | number | undefined | null): number | null {
+  if (typeof value === 'number' && !isNaN(value)) return value
+  if (!value) return null
+  const m = String(value).replace(/,/g, '').match(/(\d+)/)
+  return m ? parseInt(m[1], 10) : null
+}
+
+function buildSerpPhotos(ad: IkmanAd): string[] {
+  const photos: string[] = []
+  if (ad.imgUrl) photos.push(ad.imgUrl)
+
+  const imgs = ad.images
+  if (imgs && isSerpImages(imgs) && imgs.ids && imgs.base_uri && ad.slug) {
+    for (const id of imgs.ids) {
+      photos.push(`${imgs.base_uri}/${ad.slug}/${id}/142/107/cropped.jpg`)
+    }
+  }
+
+  for (const t of ad.thumbnails ?? []) {
+    if (t.cdn_url) photos.push(t.cdn_url)
+  }
+  if (Array.isArray(imgs)) {
+    for (const i of imgs) {
+      if (i.cdn_url) photos.push(i.cdn_url)
+    }
+  }
+
+  return [...new Set(photos.filter(Boolean))]
+}
+
+function buildDetailPhotos(ad: IkmanAd): string[] {
+  const imgs = ad.images
+  if (imgs && hasDetailMeta(imgs)) {
+    return [...new Set(imgs.meta.map((m) => m.src ?? '').filter(Boolean))]
+  }
+  return buildSerpPhotos(ad)
 }
 
 // Extract window.initialData JSON from raw HTML using brace counting
@@ -67,50 +142,66 @@ function extractInitialData(html: string): Record<string, unknown> | null {
 }
 
 function extractAdsList(data: Record<string, unknown>): IkmanAd[] {
-  // Log top-level keys to help debug any future structure changes
   console.log('  initialData keys:', Object.keys(data).join(', '))
 
   const serp    = data.serp    as Record<string, unknown> | undefined
   const listing = data.listing as Record<string, unknown> | undefined
 
-  const ads =
-    (serp?.ads    as IkmanAd[] | undefined) ??
-    (serp?.list   as IkmanAd[] | undefined) ??
-    (listing?.list as IkmanAd[] | undefined) ??
-    (listing?.ads  as IkmanAd[] | undefined) ??
-    (data.ads      as IkmanAd[] | undefined) ??
+  if (serp) console.log('  serp keys:', Object.keys(serp).join(', '))
+
+  const serpAdsData = unwrapSuccessData<{ ads?: IkmanAd[] }>(serp?.ads)
+
+  let source = 'none'
+  let ads: unknown =
+    serpAdsData?.ads ??
+    (Array.isArray(serp?.ads) ? serp.ads : undefined) ??
+    (Array.isArray(serp?.list) ? serp.list : undefined) ??
+    (Array.isArray(listing?.list) ? listing.list : undefined) ??
+    (Array.isArray(listing?.ads) ? listing.ads : undefined) ??
+    (Array.isArray(data.ads) ? data.ads : undefined) ??
     []
 
-  console.log(`  Ads in initialData: ${ads.length}`)
-  return ads
+  if (serpAdsData?.ads) source = 'serp.ads.data.ads'
+  else if (Array.isArray(serp?.ads)) source = 'serp.ads'
+  else if (Array.isArray(serp?.list)) source = 'serp.list'
+
+  const list = Array.isArray(ads) ? ads : []
+  console.log(`  Resolved ${list.length} ads from ${source}`)
+  return list
+}
+
+function parseBedrooms(ad: IkmanAd, title: string): number | null {
+  const detailsMatch = ad.details?.match(/Beds:\s*(\d+)/i)
+  if (detailsMatch) return parseInt(detailsMatch[1], 10)
+
+  for (const prop of ad.properties ?? []) {
+    if (prop.key === 'bedrooms' || prop.label?.toLowerCase().includes('bed')) {
+      const n = parseInt(prop.value ?? '', 10)
+      if (!isNaN(n)) return n
+    }
+  }
+
+  for (const attr of ad.attributes ?? []) {
+    if (attr.name?.toLowerCase().includes('bedroom') || attr.name?.toLowerCase().includes('room')) {
+      const n = parseInt(attr.value ?? '', 10)
+      if (!isNaN(n)) return n
+    }
+  }
+
+  const m = title.match(/(\d+)\s*(?:bed(?:room)?s?|BR)/i)
+  return m ? parseInt(m[1], 10) : null
 }
 
 function parseAd(ad: IkmanAd, area: string, categorySlug: string): Partial<Listing> | null {
   if (!ad.slug) return null
 
   const slug     = ad.slug
-  const ikmanId  = slug.split('-').pop() ?? slug
+  const ikmanId  = ad.id ?? slug.split('-').pop() ?? slug
   const title    = ad.title ?? ''
-  const price    = ad.money?.price ?? null
-  const location = ad.locations?.[0]?.name ?? area
-
-  // Bedrooms from attributes first, then title
-  let bedrooms: number | null = null
-  for (const attr of ad.attributes ?? []) {
-    if (attr.name?.toLowerCase().includes('bedroom') || attr.name?.toLowerCase().includes('room')) {
-      const n = parseInt(attr.value ?? '', 10)
-      if (!isNaN(n)) { bedrooms = n; break }
-    }
-  }
-  if (bedrooms === null) {
-    const m = title.match(/(\d+)\s*(?:bed(?:room)?s?|BR)/i)
-    if (m) bedrooms = parseInt(m[1], 10)
-  }
-
-  const photos: string[] = [
-    ...(ad.thumbnails ?? []).map((t) => t.cdn_url ?? ''),
-    ...(ad.images     ?? []).map((i) => i.cdn_url ?? ''),
-  ].filter(Boolean)
+  const price    = parsePrice(ad.price ?? ad.money?.price ?? ad.money?.amount)
+  const location = ad.location ?? ad.locations?.[0]?.name ?? area
+  const bedrooms = parseBedrooms(ad, title)
+  const photos   = buildSerpPhotos(ad)
 
   let listing_type: Listing['listing_type'] = null
   if (categorySlug.includes('apartment'))                      listing_type = 'apartment'
@@ -125,7 +216,8 @@ function parseAd(ad: IkmanAd, area: string, categorySlug: string): Partial<Listi
 
   const contact     = ad.contact?.chat_phone_number ?? ad.contact?.phone ?? null
   const description = ad.description ?? null
-  const posted_at   = ad.posted_at ?? ad.created_at ?? null
+  const posted_at   =
+    ad.posted_at ?? ad.postedDate ?? ad.lastBumpUpDate ?? ad.timeStamp ?? ad.created_at ?? null
 
   return {
     ikman_id: ikmanId,
@@ -144,6 +236,15 @@ function parseAd(ad: IkmanAd, area: string, categorySlug: string): Partial<Listi
   }
 }
 
+function extractDetailAd(data: Record<string, unknown>): IkmanAd | null {
+  const wrapped = unwrapSuccessData<{ ad?: IkmanAd }>(data.adDetail)
+  if (wrapped?.ad) return wrapped.ad
+  if (wrapped && !('ad' in wrapped)) return wrapped as IkmanAd
+
+  const legacy = data.ad as IkmanAd | undefined
+  return legacy ?? null
+}
+
 async function scrapeDetailPage(
   app: FirecrawlApp,
   url: string,
@@ -159,15 +260,15 @@ async function scrapeDetailPage(
     const data = extractInitialData(res.rawHtml)
     if (!data) return { description: null, contact: null, photos: [] }
 
-    const ad = data.ad as IkmanAd | undefined
+    const ad = extractDetailAd(data)
     if (!ad) return { description: null, contact: null, photos: [] }
 
-    const photos: string[] = [
-      ...(ad.thumbnails ?? []).map((t) => t.cdn_url ?? ''),
-      ...(ad.images     ?? []).map((i) => i.cdn_url ?? ''),
-    ].filter(Boolean)
-
-    const contact     = ad.contact?.chat_phone_number ?? ad.contact?.phone ?? null
+    const photos = buildDetailPhotos(ad)
+    const contact =
+      ad.contactCard?.phoneNumbers?.[0]?.number ??
+      ad.contact?.chat_phone_number ??
+      ad.contact?.phone ??
+      null
     const description = ad.description?.slice(0, 1000) ?? null
 
     return { description, contact, photos }
@@ -217,7 +318,6 @@ export async function runScraper(config: ScrapeConfig): Promise<Partial<Listing>
 
           const ads = extractAdsList(data)
 
-          // No more ads = no more pages
           if (ads.length === 0) {
             console.log(`  No ads on page ${page}, stopping pagination`)
             break
@@ -245,13 +345,11 @@ export async function runScraper(config: ScrapeConfig): Promise<Partial<Listing>
           break
         }
 
-        // Polite delay between pages
         await new Promise((r) => setTimeout(r, 1000))
       }
     }
   }
 
-  // Deduplicate
   const seen = new Set<string>()
   const unique = allListings.filter((l) => {
     if (!l.ikman_id || seen.has(l.ikman_id)) return false
@@ -259,7 +357,6 @@ export async function runScraper(config: ScrapeConfig): Promise<Partial<Listing>
     return true
   })
 
-  // Enrich with detail pages for listings missing contact/description
   const needsDetail = unique.filter((l) => !l.contact || !l.description)
   console.log(`\nFetching details for ${needsDetail.length} listings...`)
 
