@@ -209,10 +209,32 @@ export function parsePostedAt(
   return null
 }
 
+/**
+ * Remove lone Unicode surrogates (U+D800–U+DFFF) that are not part of a valid
+ * surrogate pair. PostgreSQL's JSON parser rejects them with error 22P02.
+ * This can occur in Sinhala text and emoji scraped from ikman.
+ */
+function stripLoneSurrogates(s: string): string {
+  return s.replace(
+    /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g,
+    '',
+  )
+}
+
+function cleanStr(v: string | null | undefined): string | null {
+  if (v == null) return null
+  return stripLoneSurrogates(v)
+}
+
 export function sanitizeListingForDb(listing: Partial<Listing>): Partial<Listing> {
   return {
     ...listing,
-    posted_at: parsePostedAt(listing.posted_at ?? undefined),
+    title:       cleanStr(listing.title)       ?? listing.title,
+    description: cleanStr(listing.description),
+    location:    cleanStr(listing.location)    ?? listing.location,
+    contact:     cleanStr(listing.contact),
+    photos:      listing.photos?.map((p) => stripLoneSurrogates(p)),
+    posted_at:   parsePostedAt(listing.posted_at ?? undefined),
   }
 }
 
