@@ -85,7 +85,9 @@ export class ScrapeProgress {
 
   private _dbUpdate(patch: Record<string, unknown>): void {
     if (!this.runId) return
-    this.db.from('scrape_runs').update(patch).eq('id', this.runId).catch(console.error)
+    void this.db.from('scrape_runs').update(patch).eq('id', this.runId).then(
+      ({ error }) => { if (error) console.error('progress DB update:', error.message) },
+    )
   }
 
   private async _tgSend(text: string): Promise<{ message_id: number } | null> {
