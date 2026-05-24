@@ -1,4 +1,4 @@
-import FirecrawlApp from '@mendable/firecrawl-js'
+import { type Browser } from 'playwright'
 import type { Listing } from '../lib/types'
 
 const AREA_SLUGS: Record<string, string> = {
@@ -21,7 +21,7 @@ const TYPE_SLUGS: Record<string, string> = {
 
 const MAX_PAGES = 5 // cap at 5 pages (~125 ads) per category/area combo
 const DEFAULT_DETAIL_CONCURRENCY = 3
-const MIN_SCRAPE_INTERVAL_MS = 700 // stay under Firecrawl ~100 req/min
+const MIN_SCRAPE_INTERVAL_MS = 700 // ~100 req/min, be polite to ikman.lk
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
@@ -60,7 +60,6 @@ export interface ScrapeConfig {
   max_price: number
   min_bedrooms: number
   max_bedrooms: number
-  firecrawlApiKey: string
 }
 
 interface IkmanAd {
@@ -238,31 +237,28 @@ export function sanitizeListingForDb(listing: Partial<Listing>): Partial<Listing
   }
 }
 
-async function scrapeRawHtml(app: FirecrawlApp, url: string): Promise<string | null> {
+async function scrapeRawHtml(browser: Browser, url: string): Promise<string | null> {
   const maxAttempts = 5
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const page = await browser.newPage()
     try {
       await throttleScrape()
-      const res = await app.scrape(url, {
-        formats: ['rawHtml'],
-        onlyMainContent: false,
-        waitFor: 2000,
-      })
-      return res.rawHtml ?? null
+      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 })
+      await page.waitForTimeout(2000)
+      return await page.content()
     } catch (err) {
       const msg = (err as Error).message
-      const isRateLimit = /rate limit/i.test(msg)
-      const retrySec = msg.match(/retry after (\d+)s/i)?.[1]
-      if (isRateLimit && attempt < maxAttempts) {
-        const waitMs = retrySec ? (parseInt(retrySec, 10) + 1) * 1000 : 5000 * attempt
+      if (attempt < maxAttempts) {
+        const waitMs = 5000 * attempt
         console.log(
-          `  Rate limited, waiting ${Math.round(waitMs / 1000)}s (attempt ${attempt}/${maxAttempts})...`,
+          `  Error, waiting ${Math.round(waitMs / 1000)}s (attempt ${attempt}/${maxAttempts})...`,
         )
         await sleep(waitMs)
-        lastScrapeAt = 0
         continue
       }
       throw err
+    } finally {
+      await page.close()
     }
   }
   return null
@@ -431,7 +427,7 @@ function extractDetailAd(data: Record<string, unknown>): IkmanAd | null {
 
 /** Fetch phone + description from ad detail pages (parallel, with progress logs). */
 export async function enrichListingsWithDetails(
-  app: FirecrawlApp,
+  browser: Browser,
   listings: Partial<Listing>[],
   options?: { concurrency?: number; onProgress?: () => Promise<void> },
 ): Promise<void> {
@@ -454,7 +450,7 @@ export async function enrichListingsWithDetails(
     const label = listing.title?.slice(0, 45) ?? listing.url
     console.log(`  Detail ${index + 1}/${totalCount}: ${label}`)
 
-    const detail = await scrapeDetailPage(app, listing.url!)
+    const detail = await scrapeDetailPage(browser, listing.url!)
     if (detail.description) listing.description = detail.description
     if (detail.contact) listing.contact = detail.contact
     if (detail.posted_at) listing.posted_at = detail.posted_at
@@ -481,7 +477,7 @@ export async function enrichListingsWithDetails(
 }
 
 async function scrapeDetailPage(
-  app: FirecrawlApp,
+  browser: Browser,
   url: string,
 ): Promise<{
   description: string | null
@@ -490,7 +486,7 @@ async function scrapeDetailPage(
   posted_at: string | null
 }> {
   try {
-    const rawHtml = await scrapeRawHtml(app, url)
+    const rawHtml = await scrapeRawHtml(browser, url)
     if (!rawHtml) return { description: null, contact: null, photos: [], posted_at: null }
 
     const data = extractInitialData(rawHtml)
@@ -520,8 +516,7 @@ async function scrapeDetailPage(
   }
 }
 
-export async function runScraper(config: ScrapeConfig): Promise<Partial<Listing>[]> {
-  const app = new FirecrawlApp({ apiKey: config.firecrawlApiKey })
+export async function runScraper(config: ScrapeConfig, browser: Browser): Promise<Partial<Listing>[]> {
   const allListings: Partial<Listing>[] = []
 
   for (const area of config.areas) {
@@ -541,10 +536,10 @@ export async function runScraper(config: ScrapeConfig): Promise<Partial<Listing>
         console.log(`Scraping (page ${page}): ${url}`)
 
         try {
-          const rawHtml = await scrapeRawHtml(app, url)
+          const rawHtml = await scrapeRawHtml(browser, url)
 
           if (!rawHtml) {
-            console.log(`  Firecrawl returned no HTML`)
+            console.log(`  Playwright returned no HTML`)
             break
           }
 
