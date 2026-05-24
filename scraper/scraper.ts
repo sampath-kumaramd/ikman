@@ -433,7 +433,7 @@ function extractDetailAd(data: Record<string, unknown>): IkmanAd | null {
 export async function enrichListingsWithDetails(
   app: FirecrawlApp,
   listings: Partial<Listing>[],
-  options?: { concurrency?: number },
+  options?: { concurrency?: number; onProgress?: () => Promise<void> },
 ): Promise<void> {
   const toFetch = listings.filter((l) => l.url && !l.contact)
   const total = toFetch.length
@@ -466,6 +466,7 @@ export async function enrichListingsWithDetails(
     if (done % 10 === 0 || done === totalCount) {
       console.log(`  Progress: ${done}/${totalCount} detail pages fetched`)
     }
+    await options?.onProgress?.()
   }
 
   await runWithConcurrency(toFetch, concurrency, (listing, i) =>

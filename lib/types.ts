@@ -36,6 +36,18 @@ export interface AppSettings {
   notifications_enabled: boolean
 }
 
+export interface ScrapeRun {
+  id:           string
+  status:       'running' | 'done' | 'failed'
+  current_step: string | null
+  steps_log:    string[]
+  new_count:    number
+  total_count:  number
+  error:        string | null
+  started_at:   string
+  finished_at:  string | null
+}
+
 export interface ListingFilters {
   area?: string
   listing_type?: string

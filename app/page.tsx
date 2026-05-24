@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { RefreshCw, Loader2, Home, Building2, LayoutGrid } from 'lucide-react'
 import { ListingCard } from '@/components/ListingCard'
 import { FilterBar } from '@/components/FilterBar'
+import { ScrapeStatusBanner } from '@/components/ScrapeStatusBanner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import type { Listing, ListingFilters } from '@/lib/types'
@@ -114,6 +115,9 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* Live scrape status */}
+      <ScrapeStatusBanner onRunCompleted={() => fetchListings(filters)} />
 
       {/* Filters */}
       <FilterBar filters={filters} areas={areas} onChange={setFilters} />

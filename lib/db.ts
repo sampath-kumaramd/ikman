@@ -1,5 +1,5 @@
 import { SupabaseClient } from '@supabase/supabase-js'
-import type { AppSettings, Listing, ListingFilters, Notification } from './types'
+import type { AppSettings, Listing, ListingFilters, Notification, ScrapeRun } from './types'
 
 // ── Settings ──────────────────────────────────────────────────────────────────
 
@@ -166,6 +166,16 @@ export async function markNotificationsRead(client: SupabaseClient): Promise<voi
     .update({ read: true })
     .eq('read', false)
   if (error) throw error
+}
+
+export async function getLatestScrapeRun(client: SupabaseClient): Promise<ScrapeRun | null> {
+  const { data } = await client
+    .from('scrape_runs')
+    .select('*')
+    .order('started_at', { ascending: false })
+    .limit(1)
+    .single()
+  return (data as ScrapeRun) ?? null
 }
 
 export async function getExistingIkmanIds(client: SupabaseClient): Promise<Set<string>> {
