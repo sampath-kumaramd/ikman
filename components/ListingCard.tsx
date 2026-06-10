@@ -59,20 +59,20 @@ export function ListingCard({ listing, onToggleViewed }: ListingCardProps) {
 
   return (
     <Card className={cn(
-      'overflow-hidden gap-0 py-0 hover:shadow-lg transition-all duration-200',
-      !isNew && 'opacity-75',
+      'glass overflow-hidden gap-0 rounded-2xl border-0 bg-transparent py-0 shadow-none transition-all duration-200 hover:bg-white/[0.03]',
+      !isNew && 'opacity-60 saturate-50',
     )}>
       {/* Photo */}
-      <div className="relative h-44 bg-muted overflow-hidden">
+      <div className="relative h-44 bg-white/[0.03] overflow-hidden">
         {isNew && (
-          <Badge className="absolute top-3 left-3 z-10 bg-orange-500 text-white hover:bg-orange-500">
+          <Badge className="absolute top-3 left-3 z-10 bg-orange-500 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] hover:bg-orange-500">
             NEW
           </Badge>
         )}
         {!isNew && (
           <Badge
             variant="secondary"
-            className="absolute top-3 left-3 z-10 text-muted-foreground"
+            className="absolute top-3 left-3 z-10 bg-black/40 text-zinc-300 backdrop-blur-sm"
           >
             Viewed
           </Badge>
@@ -146,7 +146,7 @@ export function ListingCard({ listing, onToggleViewed }: ListingCardProps) {
           {listing.contact && (
             <a
               href={`tel:${listing.contact}`}
-              className={cn(buttonVariants({ variant: 'secondary', size: 'sm' }), 'text-green-700 bg-green-50 hover:bg-green-100')}
+              className={cn(buttonVariants({ variant: 'secondary', size: 'sm' }), 'bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25')}
             >
               <Phone size={12} /> {listing.contact}
             </a>
@@ -158,7 +158,7 @@ export function ListingCard({ listing, onToggleViewed }: ListingCardProps) {
             size="sm"
             disabled={toggling}
             onClick={toggleNew}
-            className="text-muted-foreground hover:text-foreground"
+            className="text-zinc-400 hover:bg-white/[0.06] hover:text-white"
             title={isNew ? 'Mark as viewed' : 'Mark as new'}
           >
             {isNew
@@ -172,7 +172,7 @@ export function ListingCard({ listing, onToggleViewed }: ListingCardProps) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={markViewed}
-            className={cn(buttonVariants({ variant: 'secondary', size: 'sm' }), 'ml-auto')}
+            className={cn(buttonVariants({ variant: 'secondary', size: 'sm' }), 'ml-auto bg-white/[0.06] text-zinc-200 hover:bg-white/[0.12]')}
           >
             View on ikman <ExternalLink size={12} />
           </a>

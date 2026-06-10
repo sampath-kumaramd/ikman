@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server'
+import { getAuthUser } from '@/lib/supabase-server'
 
 // Triggers the GitHub Actions workflow_dispatch so the user can hit
 // "Run Now" from the UI without waiting for the cron schedule.
 export async function POST() {
+  const user = await getAuthUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const token = process.env.GITHUB_PAT
   const owner = process.env.GITHUB_OWNER
   const repo  = process.env.GITHUB_REPO

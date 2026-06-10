@@ -13,7 +13,8 @@ export class ScrapeProgress {
 
   constructor(private readonly db: SupabaseClient) {
     this.token  = process.env.TELEGRAM_BOT_TOKEN ?? ''
-    this.chatId = process.env.TELEGRAM_CHAT_ID   ?? ''
+    // Optional admin chat for run-progress messages (users only get listing alerts)
+    this.chatId = process.env.TELEGRAM_ADMIN_CHAT_ID ?? process.env.TELEGRAM_CHAT_ID ?? ''
   }
 
   async start(): Promise<void> {

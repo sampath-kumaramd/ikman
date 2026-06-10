@@ -26,9 +26,12 @@ export function NotificationBell() {
   }
 
   useEffect(() => {
-    load()
+    const t = setTimeout(load, 0)
     const id = setInterval(load, 60_000)
-    return () => clearInterval(id)
+    return () => {
+      clearTimeout(t)
+      clearInterval(id)
+    }
   }, [])
 
   useEffect(() => {
@@ -57,7 +60,7 @@ export function NotificationBell() {
       </Button>
 
       {open && (
-        <div className="absolute right-0 top-11 w-80 bg-popover rounded-xl shadow-xl border border-border z-50 overflow-hidden">
+        <div className="glass absolute right-0 top-11 z-50 w-80 overflow-hidden rounded-2xl bg-[#0b0f1a]/80">
           <div className="flex items-center justify-between px-4 py-3">
             <span className="font-semibold text-sm">
               {notifications.length > 0 ? `${notifications.length} new listings` : 'Notifications'}
@@ -83,7 +86,7 @@ export function NotificationBell() {
                       href={n.listing?.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex flex-col gap-0.5 px-4 py-3 hover:bg-muted/50 transition-colors"
+                      className="flex flex-col gap-0.5 px-4 py-3 hover:bg-white/[0.06] transition-colors"
                     >
                       <span className="text-sm font-medium line-clamp-1">
                         {n.listing?.title ?? 'New listing'}
@@ -95,7 +98,7 @@ export function NotificationBell() {
                       </span>
                       <span className="text-[11px] text-muted-foreground/70 mt-0.5">
                         {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
-                        {n.whatsapp_sent && ' · 📱 WhatsApp sent'}
+                        {n.whatsapp_sent && ' · 📱 Telegram sent'}
                       </span>
                     </a>
                     {i < notifications.length - 1 && <Separator />}

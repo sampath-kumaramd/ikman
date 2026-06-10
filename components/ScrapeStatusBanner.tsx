@@ -54,18 +54,18 @@ export function ScrapeStatusBanner({ onRunCompleted }: Props) {
   const isDone    = run.status === 'done'
   const isFailed  = run.status === 'failed'
 
-  const borderColor = isRunning ? 'border-blue-500/40'  :
-                      isDone    ? 'border-green-500/40' :
-                                  'border-red-500/40'
-  const bgColor     = isRunning ? 'bg-blue-500/5'   :
-                      isDone    ? 'bg-green-500/5'  :
-                                  'bg-red-500/5'
-  const textColor   = isRunning ? 'text-blue-600'   :
-                      isDone    ? 'text-green-600'  :
-                                  'text-red-600'
+  const borderColor = isRunning ? 'border-sky-400/25'     :
+                      isDone    ? 'border-emerald-400/25' :
+                                  'border-red-400/25'
+  const bgColor     = isRunning ? 'bg-sky-500/10'     :
+                      isDone    ? 'bg-emerald-500/10' :
+                                  'bg-red-500/10'
+  const textColor   = isRunning ? 'text-sky-300'     :
+                      isDone    ? 'text-emerald-300' :
+                                  'text-red-300'
 
   return (
-    <div className={`rounded-xl border ${borderColor} ${bgColor} px-4 py-3 text-sm`}>
+    <div className={`rounded-xl border ${borderColor} ${bgColor} px-4 py-3 text-sm backdrop-blur-sm`}>
       <div className="flex items-center gap-2">
         {/* Icon */}
         {isRunning && <Loader2 size={15} className={`${textColor} animate-spin shrink-0`} />}
@@ -78,7 +78,7 @@ export function ScrapeStatusBanner({ onRunCompleted }: Props) {
         </span>
 
         {/* Timestamp */}
-        <span className="text-muted-foreground text-xs shrink-0">
+        <span className="text-zinc-500 text-xs shrink-0">
           {formatDistanceToNow(new Date(run.started_at), { addSuffix: true })}
         </span>
 
@@ -86,7 +86,7 @@ export function ScrapeStatusBanner({ onRunCompleted }: Props) {
         {(run.steps_log?.length ?? 0) > 0 && (
           <button
             onClick={() => setExpanded((e) => !e)}
-            className="text-muted-foreground hover:text-foreground ml-1 shrink-0"
+            className="text-zinc-500 hover:text-white ml-1 shrink-0"
           >
             {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           </button>
@@ -95,10 +95,10 @@ export function ScrapeStatusBanner({ onRunCompleted }: Props) {
 
       {/* Expanded step log */}
       {expanded && run.steps_log?.length > 0 && (
-        <div className="mt-2 pl-5 space-y-0.5 border-t border-border/50 pt-2">
+        <div className="mt-2 pl-5 space-y-0.5 border-t border-white/10 pt-2">
           {run.steps_log.map((s, i) => (
-            <div key={i} className="text-xs text-muted-foreground flex items-center gap-1.5">
-              <span className="text-green-500">✓</span> {s}
+            <div key={i} className="text-xs text-zinc-400 flex items-center gap-1.5">
+              <span className="text-emerald-400">✓</span> {s}
             </div>
           ))}
         </div>

@@ -31,6 +31,21 @@ export async function sendTelegram(
   }
 }
 
+let _botUsername: string | null = null
+
+/** Bot username for t.me deep links — fetched once via getMe and cached. */
+export async function getBotUsername(token: string): Promise<string | null> {
+  if (_botUsername) return _botUsername
+  try {
+    const res = await fetch(`${TELEGRAM_API}/bot${token}/getMe`)
+    const data = await res.json()
+    _botUsername = data?.result?.username ?? null
+  } catch {
+    _botUsername = null
+  }
+  return _botUsername
+}
+
 export function buildListingMessage(listing: Partial<Listing>): string {
   const price = listing.price
     ? `Rs. ${listing.price.toLocaleString()}/mo`

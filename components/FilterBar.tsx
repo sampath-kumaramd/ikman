@@ -77,7 +77,7 @@ export function FilterBar({ filters, areas, onChange }: FilterBarProps) {
     (filters.max_price ?? DEFAULT_MAX_PRICE) < DEFAULT_MAX_PRICE
 
   return (
-    <div className="bg-card border border-border rounded-xl p-4 shadow-sm space-y-5">
+    <div className="glass rounded-2xl p-4 space-y-5">
 
       {/* ── Row 1: dropdowns ───────────────────────────────────────── */}
       <div className="flex flex-wrap gap-3 items-end">
@@ -89,7 +89,7 @@ export function FilterBar({ filters, areas, onChange }: FilterBarProps) {
             value={filters.area ?? ''}
             onValueChange={(val) => set({ area: val || undefined })}
           >
-            <SelectTrigger className="w-full h-9">
+            <SelectTrigger className="w-full h-9 border-white/10 bg-white/[0.04]">
               <SelectValue placeholder="All areas" />
             </SelectTrigger>
             <SelectContent>
@@ -108,7 +108,7 @@ export function FilterBar({ filters, areas, onChange }: FilterBarProps) {
             value={filters.listing_type ?? ''}
             onValueChange={(val) => set({ listing_type: val || undefined })}
           >
-            <SelectTrigger className="w-full h-9">
+            <SelectTrigger className="w-full h-9 border-white/10 bg-white/[0.04]">
               <SelectValue placeholder="All types" />
             </SelectTrigger>
             <SelectContent>
@@ -135,7 +135,7 @@ export function FilterBar({ filters, areas, onChange }: FilterBarProps) {
               }
             }}
           >
-            <SelectTrigger className="w-full h-9">
+            <SelectTrigger className="w-full h-9 border-white/10 bg-white/[0.04]">
               <SelectValue placeholder="Any" />
             </SelectTrigger>
             <SelectContent>
@@ -154,7 +154,7 @@ export function FilterBar({ filters, areas, onChange }: FilterBarProps) {
             value={statusFromFilters(filters)}
             onValueChange={(val) => set({ is_new: isNewFromStatus(val ?? 'all') })}
           >
-            <SelectTrigger className="w-full h-9">
+            <SelectTrigger className="w-full h-9 border-white/10 bg-white/[0.04]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -172,7 +172,7 @@ export function FilterBar({ filters, areas, onChange }: FilterBarProps) {
             value={filters.sort ?? 'date_desc'}
             onValueChange={(val) => set({ sort: val as ListingFilters['sort'] })}
           >
-            <SelectTrigger className="w-full h-9">
+            <SelectTrigger className="w-full h-9 border-white/10 bg-white/[0.04]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -188,7 +188,7 @@ export function FilterBar({ filters, areas, onChange }: FilterBarProps) {
       <div className="space-y-2">
         <div className="flex justify-between">
           <label className="text-xs font-medium text-muted-foreground">Price range</label>
-          <span className="text-xs font-semibold text-foreground">
+          <span className="text-xs font-semibold text-sky-300">
             Rs. {minPrice.toLocaleString()} — Rs. {maxPrice.toLocaleString()}
           </span>
         </div>
@@ -218,7 +218,7 @@ export function FilterBar({ filters, areas, onChange }: FilterBarProps) {
             type="button"
             variant="ghost"
             size="sm"
-            className="text-muted-foreground h-7 text-xs"
+            className="h-7 text-xs text-zinc-400 hover:bg-white/[0.06] hover:text-white"
             onClick={() => onChange({ ...DEFAULT_FILTERS, sort: filters.sort })}
           >
             <RotateCcw size={11} />

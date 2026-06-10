@@ -1,155 +1,158 @@
 # ikman Rental Tracker
 
-Monitors ikman.lk for apartment, annex, and house rentals along Galle Road (Moratuwa, Ratmalana, Mount Lavinia, Dehiwala). Sends WhatsApp alerts for new listings and shows them in a web dashboard.
+Multi-user tracker for ikman.lk boarding & rental listings (apartments, annexes, houses). Each user signs up, sets their own search requirements (areas, property types, budget, bedrooms), connects their own Telegram chat, and gets an instant alert whenever a new matching listing is posted.
 
-**Stack:** Next.js 16 · Supabase (PostgreSQL) · Firecrawl · Twilio WhatsApp · GitHub Actions · Vercel
+**Stack:** Next.js 16 · Supabase (PostgreSQL + Auth) · Playwright · Telegram Bot · GitHub Actions · Vercel
 
 ---
 
 ## Architecture
 
 ```
-GitHub Actions (every 30 min)
-  └── Firecrawl scrapes ikman.lk (window.initialData)
-  └── New listings → Supabase DB
-  └── WhatsApp alert via Twilio
+GitHub Actions (every 5 min)
+  └── Playwright scrapes ikman.lk (window.initialData)
+        — one scrape covering the UNION of every user's areas/types
+  └── New listings → shared Supabase pool
+  └── Each new listing matched against EACH user's criteria
+        → Telegram alert to that user's linked chat
+        → in-app notification row for that user
 
 Vercel (Next.js)
-  └── Dashboard shows listings from Supabase
+  └── Supabase Auth (email/password) — proxy.ts guards all pages
+  └── First sign-in → forced onboarding wizard
+        Step 1: search requirements   Step 2: connect Telegram
+  └── Dashboard shows only listings matching the user's criteria
   └── "Run Now" button → triggers GitHub Actions
-  └── Settings page → configures all options
+  └── /api/telegram-webhook → handles /start <code> account linking + commands
 ```
 
 ---
 
 ## Setup Guide
 
-### 1. Supabase Database
+### 1. Supabase
 
-1. Open your Supabase project → **SQL Editor**
-2. Paste and run the contents of [`supabase/schema.sql`](supabase/schema.sql)
+1. Create a project at [supabase.com](https://supabase.com)
+2. **SQL Editor** → paste and run [`supabase/schema.sql`](supabase/schema.sql)
+   (upgrading an old single-user install? run [`supabase/migration-multi-user.sql`](supabase/migration-multi-user.sql) instead)
+3. **Authentication → Providers**: make sure **Email** is enabled.
+   Optionally disable "Confirm email" for instant sign-ups while testing.
 
-### 2. Firecrawl API key
+### 2. Telegram Bot (one bot for the whole app)
 
-1. Sign up at [firecrawl.dev](https://www.firecrawl.dev) and create an API key
-2. Save it as the `FIRECRAWL_API_KEY` GitHub secret (see Step 4)
+1. Message [@BotFather](https://t.me/BotFather) → `/newbot` → note the **bot token**
+2. Users never touch BotFather — they link their chat from inside the app
+   via a `t.me/yourbot?start=<code>` deep link during onboarding.
+3. After deploying (step 4), register the webhook once:
+   `https://your-app.vercel.app/api/telegram-webhook/register`
 
-### 3. WhatsApp (Twilio)
+### 3. GitHub Actions Secrets
 
-1. Create a [Twilio](https://www.twilio.com) account with WhatsApp enabled
-2. Note your Account SID, Auth Token, and WhatsApp-enabled sender number
-3. Add these as GitHub secrets (see Step 4)
-
-### 4. GitHub Repository
-
-Push this code to a GitHub repo:
-
-```bash
-git init
-git add .
-git commit -m "Initial commit"
-git remote add origin https://github.com/YOUR_USERNAME/ikman.git
-git push -u origin main
-```
-
-### 5. GitHub Actions Secrets
-
-Go to: **GitHub repo → Settings → Secrets and variables → Actions → New repository secret**
+Go to: **GitHub repo → Settings → Secrets and variables → Actions**
 
 | Secret | Value |
 |--------|-------|
-| `SUPABASE_URL` | Your Supabase project URL (e.g. `https://xxxx.supabase.co`) |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (from Project Settings → API) |
-| `FIRECRAWL_API_KEY` | Firecrawl API key from Step 2 |
-| `TWILIO_ACCOUNT_SID` | Twilio Account SID |
-| `TWILIO_AUTH_TOKEN` | Twilio Auth Token |
-| `TWILIO_FROM_NUMBER` | Twilio WhatsApp sender (e.g. `+14155238886`) |
-| `WHATSAPP_NUMBER` | Your number with country code: `+94760937443` |
+| `SUPABASE_URL` | Supabase project URL (e.g. `https://xxxx.supabase.co`) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service role key (Project Settings → API) |
+| `TELEGRAM_BOT_TOKEN` | Bot token from Step 2 |
+| `TELEGRAM_ADMIN_CHAT_ID` | *(optional)* chat that receives scrape progress messages |
 
-### 6. Vercel Deployment
+### 4. Vercel Deployment
 
 1. Import the repo at **vercel.com/new**
-2. Add these **Environment Variables** in Vercel:
+2. Add these **Environment Variables**:
 
 | Variable | Value |
 |----------|-------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon/public key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key |
+| `TELEGRAM_BOT_TOKEN` | Bot token from Step 2 |
 | `GITHUB_PAT` | GitHub Personal Access Token (scope: `workflow`) |
 | `GITHUB_OWNER` | Your GitHub username |
 | `GITHUB_REPO` | `ikman` (or your repo name) |
 
-3. Deploy — done!
+3. Deploy, then visit `/api/telegram-webhook/register` once to point the bot at your app.
 
-### 7. Local Development
+### 5. Local Development
 
 ```bash
-cp .env.local.example .env
-# Fill in the values in .env (or .env.local for Next.js)
+cp .env.example .env
+# Fill in the values
 
 npm run dev        # Start Next.js at http://localhost:3000
 npm run scrape     # Run scraper manually (loads .env via --env-file)
 ```
 
----
-
-## Usage
-
-| Feature | How |
-|---------|-----|
-| View listings | Open the dashboard at your Vercel URL |
-| Filter by area, type, price | Use the filter bar |
-| New listing alerts | Notification bell (top right) + WhatsApp |
-| Run scrape immediately | Click **Run Now** button on dashboard |
-| Change search areas / price / interval | Go to **Settings** (gear icon) |
+> Telegram linking locally: the webhook must be reachable by Telegram, so either
+> point the webhook at a tunnel (e.g. `ngrok`) or at your deployed app while
+> developing other features.
 
 ---
 
-## Changing the Scrape Interval
+## User flow
 
-The default is every 30 minutes. To change it:
-
-1. Edit `.github/workflows/scrape.yml` → `cron: '*/30 * * * *'`
-2. Common values:
-   - Every 15 min: `*/15 * * * *`
-   - Every hour: `0 * * * *`
-   - Every 2 hours: `0 */2 * * *`
-3. Push the change — GitHub Actions updates automatically
+1. **Sign up / sign in** at `/login` (Supabase Auth, email + password)
+2. **Onboarding (forced on first sign-in):**
+   - Step 1 — pick areas, property types, max rent, bedrooms (required)
+   - Step 2 — press **Connect Telegram**, hit **Start** in the chat that opens (required)
+3. **Dashboard** — only listings matching *your* criteria, with per-user NEW/viewed state
+4. **Settings** — change criteria, toggle alerts, test message, unlink/relink Telegram
+5. **Telegram commands** (linked chats only): `/scrape`, `/status`, `/help`
 
 ---
 
 ## Files
 
 ```
+proxy.ts                 Auth guard for all pages (Next 16 proxy, ex-middleware)
+
 app/
-  page.tsx              Dashboard
-  settings/page.tsx     Settings
+  login/                 Sign in / create account
+  onboarding/            Forced first-time setup wizard
+  auth/callback/         Supabase email-confirmation redirect
+  (app)/
+    layout.tsx           Auth + onboarding gate, header, user menu
+    page.tsx             Dashboard (per-user listings)
+    settings/page.tsx    Settings
   api/
-    listings/           GET listings, PATCH mark-read
-    settings/           GET/PUT settings
-    notifications/      GET unread, POST mark-all-read
-    trigger-scrape/     POST → triggers GitHub Actions
+    listings/            GET per-user listings, PATCH viewed state
+    settings/            GET/PUT the user's criteria
+    notifications/       GET unread, POST mark-all-read (per user)
+    onboarding/          POST — mark onboarding complete
+    telegram/connect/    POST deep link · GET status · DELETE unlink
+    telegram/test/       POST test message to the user's chat
+    telegram-webhook/    Telegram updates: /start linking + commands
+    trigger-scrape/      POST → triggers GitHub Actions
 
 components/
-  ListingCard.tsx       Individual listing card
-  FilterBar.tsx         Area / type / price / bedrooms filters
-  NotificationBell.tsx  Bell with unread count dropdown
-  SettingsForm.tsx      Full settings editor
+  AuthForm.tsx           Sign in / sign up form
+  OnboardingWizard.tsx   Two-step forced setup
+  CriteriaForm.tsx       Shared search-criteria editor
+  TelegramConnect.tsx    Connect / test / unlink Telegram
+  UserMenu.tsx           Account dropdown + sign out
+  ListingCard.tsx        Individual listing card
+  FilterBar.tsx          Area / type / price / bedrooms filters
+  NotificationBell.tsx   Bell with unread count dropdown
+  SettingsForm.tsx       Settings page form
 
 lib/
-  types.ts              Shared TypeScript types
-  supabase.ts           Supabase client (lazy)
-  db.ts                 All database queries
+  types.ts               Shared TypeScript types
+  supabase.ts            Service-role client (server data access)
+  supabase-server.ts     Cookie-bound auth client (RSC / route handlers)
+  supabase-browser.ts    Browser auth client
+  db.ts                  All database queries (per-user scoped)
 
 scraper/
-  scraper.ts            Firecrawl ikman.lk scraper
-  whatsapp.ts           Twilio WhatsApp notification helper
-  index.ts              Main entry point (run by GitHub Actions)
+  scraper.ts             Playwright ikman.lk scraper
+  telegram.ts            Telegram send + message builder
+  progress.ts            Scrape run progress (DB + optional admin chat)
+  index.ts               Entry point: union scrape → per-user match & notify
 
 supabase/
-  schema.sql            Database schema (run once in Supabase SQL editor)
+  schema.sql                  Full schema for fresh installs
+  migration-multi-user.sql    Upgrade script for existing databases
 
 .github/workflows/
-  scrape.yml            Cron job + manual trigger
+  scrape.yml             Cron job (every 5 min) + manual trigger
 ```

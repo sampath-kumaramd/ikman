@@ -1,3 +1,5 @@
+export type ListingType = 'apartment' | 'annex' | 'house'
+
 export interface Listing {
   id: string
   ikman_id: string
@@ -6,7 +8,7 @@ export interface Listing {
   location: string | null
   area: string | null
   bedrooms: number | null
-  listing_type: 'apartment' | 'annex' | 'house' | null
+  listing_type: ListingType | null
   description: string | null
   photos: string[]
   contact: string | null
@@ -18,22 +20,37 @@ export interface Listing {
 
 export interface Notification {
   id: string
+  user_id: string
   listing_id: string
-  whatsapp_sent: boolean
+  whatsapp_sent: boolean // legacy column name: true when the Telegram alert was sent
   read: boolean
   created_at: string
   listing?: Listing
 }
 
-export interface AppSettings {
+export interface SearchCriteria {
   areas: string[]
-  listing_types: ('apartment' | 'annex' | 'house')[]
+  listing_types: ListingType[]
   max_price: number
   min_bedrooms: number
   max_bedrooms: number
-  scrape_interval_minutes: number
-  whatsapp_number: string
+}
+
+export interface UserSettings extends SearchCriteria {
+  user_id: string
   notifications_enabled: boolean
+  telegram_chat_id: string | null
+  telegram_connect_code: string | null
+  onboarding_completed: boolean
+  created_at: string
+  updated_at: string
+}
+
+// Shape returned by /api/settings — never exposes chat id / connect code
+export interface SettingsResponse extends SearchCriteria {
+  notifications_enabled: boolean
+  telegram_connected: boolean
+  onboarding_completed: boolean
 }
 
 export interface ScrapeRun {

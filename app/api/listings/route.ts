@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminClient } from '@/lib/supabase'
-import { getListings, markListingsRead, setListingNew } from '@/lib/db'
+import { getAuthUser } from '@/lib/supabase-server'
+import {
+  getListingsForUser, getUserSettings, markListingsViewed, setListingViewed,
+} from '@/lib/db'
 import type { ListingFilters } from '@/lib/types'
 
 export async function GET(req: NextRequest) {
   try {
+    const user = await getAuthUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const sp = req.nextUrl.searchParams
     const filters: ListingFilters = {
       area:         sp.get('area')         ?? undefined,
@@ -20,25 +26,31 @@ export async function GET(req: NextRequest) {
     }
 
     const db = getAdminClient()
-    const result = await getListings(db, filters)
+    const settings = await getUserSettings(db, user.id)
+    if (!settings) return NextResponse.json({ listings: [], total: 0 })
+
+    const result = await getListingsForUser(db, settings, filters)
     return NextResponse.json(result)
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 })
   }
 }
 
-// Mark specific listings as read (no longer "new")
-// Body: { ids: string[] }          — bulk mark viewed
+// Mark specific listings as viewed for the current user (no longer "new")
+// Body: { ids: string[] }            — bulk mark viewed
 //       { id: string, is_new: bool } — single toggle viewed/unviewed
 export async function PATCH(req: NextRequest) {
   try {
+    const user = await getAuthUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const body = await req.json() as { ids?: string[]; id?: string; is_new?: boolean }
     const db = getAdminClient()
 
     if (body.id !== undefined && body.is_new !== undefined) {
-      await setListingNew(db, body.id, body.is_new)
+      await setListingViewed(db, user.id, body.id, !body.is_new)
     } else if (body.ids?.length) {
-      await markListingsRead(db, body.ids)
+      await markListingsViewed(db, user.id, body.ids)
     }
 
     return NextResponse.json({ ok: true })
