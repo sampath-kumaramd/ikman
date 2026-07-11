@@ -1,3 +1,5 @@
+import { ClerkProvider } from '@clerk/nextjs'
+import { shadcn } from '@clerk/ui/themes'
 import type { Metadata } from 'next'
 import { Geist, Bricolage_Grotesque } from 'next/font/google'
 import './globals.css'
@@ -51,11 +53,16 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    // The whole app runs on the dark glass theme; `dark` lives on <html> so
-    // portalled UI (selects, popovers) picks up the dark tokens too.
     <html lang="en" className="dark">
       <body className={`${geist.className} ${bricolage.variable} min-h-screen bg-[#07090f] antialiased`}>
-        {children}
+        <ClerkProvider
+          appearance={{ theme: shadcn }}
+          signInUrl="/sign-in"
+          signUpUrl="/sign-up"
+          afterSignOutUrl="/"
+        >
+          {children}
+        </ClerkProvider>
       </body>
     </html>
   )

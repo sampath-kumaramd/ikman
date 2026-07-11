@@ -511,7 +511,7 @@ export async function runScraper(config: ScrapeConfig, browser: Browser): Promis
   for (const area of config.areas) {
     const areaSlug = areaToSlug(area)
     if (!areaSlug) {
-      console.warn(`  Skipping unsupported area: ${area}`)
+      console.warn(`  Skipping area with no slug: ${area}`)
       continue
     }
 

@@ -1,84 +1,88 @@
 'use client'
 
-import { Timer, SlidersHorizontal, Send, LayoutGrid, Eye, MapPin } from 'lucide-react'
-import { BentoCard, BentoGrid } from '@/components/ui/bento-grid'
+import { Timer, Send, SlidersHorizontal, LayoutGrid, Eye, MapPin } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { Reveal } from './Reveal'
 
-/** Specular streak — the diagonal light reflection you see on real glass. */
-function GlassSheen({ className = '' }: { className?: string }) {
-  return (
-    <div
-      aria-hidden
-      className={`pointer-events-none absolute inset-0 ${className}`}
-    />
-  )
-}
-
-const FEATURES = [
+const FEATURES: {
+  icon: LucideIcon
+  title: string
+  body: string
+  wide?: boolean
+}[] = [
   {
-    Icon: Timer,
-    name: 'Scraped every 15 minutes',
-    description:
-      'A scraper sweeps ikman.lk around the clock, so fresh listings reach you while they’re still fresh.',
-    className: 'lg:col-span-2',
-    background: <GlassSheen className="bg-[linear-gradient(115deg,rgba(255,255,255,0.07),transparent_38%)]" />,
+    icon: Timer,
+    title: 'Scheduled scrapes',
+    body: 'We check ikman.lk on a fixed interval so new ads surface while they are still open.',
+    wide: true,
   },
   {
-    Icon: Send,
-    name: 'Telegram alerts',
-    description: 'Each match lands in your own Telegram chat with price, photos hint, location and a direct link.',
-    className: 'lg:col-span-1',
-    background: <GlassSheen className="bg-[linear-gradient(160deg,rgba(255,255,255,0.06),transparent_45%)]" />,
+    icon: Send,
+    title: 'Telegram first',
+    body: 'Matches go to your chat with price, area and a direct link — no app dig-through.',
   },
   {
-    Icon: SlidersHorizontal,
-    name: 'Your own criteria',
-    description: 'Areas, property type, budget, bedrooms — every account gets its own saved search.',
-    className: 'lg:col-span-1',
-    background: <GlassSheen className="bg-[linear-gradient(125deg,rgba(255,255,255,0.06),transparent_42%)]" />,
+    icon: MapPin,
+    title: 'Island-wide coverage',
+    body: 'All ikman locations, filterable by district. Track multiple towns in one account.',
   },
   {
-    Icon: LayoutGrid,
-    name: 'Personal dashboard',
-    description: 'Browse, filter and sort everything that matched you — only your listings, nobody else’s.',
-    className: 'lg:col-span-1',
-    background: <GlassSheen className="bg-[linear-gradient(105deg,rgba(255,255,255,0.05),transparent_50%)]" />,
+    icon: SlidersHorizontal,
+    title: 'Your criteria',
+    body: 'Areas, rent ceiling, bedrooms and property type are saved per user — not shared.',
   },
   {
-    Icon: Eye,
-    name: 'NEW / viewed tracking',
-    description: 'Listings you haven’t seen yet are flagged NEW, so you always know what’s worth a look.',
-    className: 'lg:col-span-1',
-    background: <GlassSheen className="bg-[linear-gradient(140deg,rgba(255,255,255,0.06),transparent_40%)]" />,
+    icon: LayoutGrid,
+    title: 'Private dashboard',
+    body: 'Filter and sort only listings that match you. Mark items viewed as you go.',
   },
   {
-    Icon: MapPin,
-    name: 'All your areas at once',
-    description: 'Moratuwa to Nugegoda — track as many areas as you like with one account, one feed.',
-    className: 'lg:col-span-2',
-    background: <GlassSheen className="bg-[linear-gradient(110deg,rgba(255,255,255,0.07),transparent_35%)]" />,
+    icon: Eye,
+    title: 'New vs viewed',
+    body: 'Unseen listings stay highlighted so you always know what still needs a call.',
+    wide: true,
   },
 ]
 
 export function FeaturesBento() {
   return (
-    <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:py-28">
-      <Reveal className="text-center">
-        <h2 className="font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
-          Built to win the <span className="text-sky-400">first-call race</span>
-        </h2>
-        <p className="mx-auto mt-3 max-w-md text-zinc-400">
-          Good places go in hours. Everything here exists to get you there first.
-        </p>
-      </Reveal>
+    <section id="features" className="border-b border-white/[0.06]">
+      <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:py-24">
+        <Reveal>
+          <div className="max-w-xl">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sky-400/90">
+              Product
+            </p>
+            <h2 className="mt-3 font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
+              Everything you need to move first
+            </h2>
+            <p className="mt-3 text-base leading-relaxed text-zinc-400">
+              Good places in Colombo go fast. This stack exists to shorten the gap between
+              “posted” and “you saw it”.
+            </p>
+          </div>
+        </Reveal>
 
-      <Reveal delay={0.15}>
-        <BentoGrid className="mt-14 auto-rows-[15rem] lg:grid-cols-3">
-          {FEATURES.map((feature) => (
-            <BentoCard key={feature.name} {...feature} href="/sign-up" cta="Get started" />
+        <div className="mt-14 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {FEATURES.map((f, i) => (
+            <Reveal key={f.title} delay={i * 0.05}>
+              <article
+                className={
+                  f.wide
+                    ? 'flex h-full flex-col rounded-2xl border border-white/[0.07] bg-white/[0.02] p-6 sm:col-span-2 lg:col-span-1 lg:min-h-[11rem]'
+                    : 'flex h-full flex-col rounded-2xl border border-white/[0.07] bg-white/[0.02] p-6 lg:min-h-[11rem]'
+                }
+              >
+                <div className="flex size-9 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.03] text-zinc-300">
+                  <f.icon size={18} strokeWidth={1.75} />
+                </div>
+                <h3 className="mt-5 font-display text-base font-semibold text-white">{f.title}</h3>
+                <p className="mt-2 flex-1 text-sm leading-relaxed text-zinc-400">{f.body}</p>
+              </article>
+            </Reveal>
           ))}
-        </BentoGrid>
-      </Reveal>
+        </div>
+      </div>
     </section>
   )
 }

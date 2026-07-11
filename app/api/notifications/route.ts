@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminClient } from '@/lib/supabase'
-import { getAuthUser } from '@/lib/supabase-server'
+import { getAuthUser } from '@/lib/auth'
 import { getNotifications, markNotificationsRead } from '@/lib/db'
 
 export async function GET(req: NextRequest) {

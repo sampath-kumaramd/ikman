@@ -1,64 +1,55 @@
-import { createServerClient } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
+import { NextResponse } from 'next/server'
 
-const PUBLIC_PATHS = [
-  '/login',
-  '/auth',
-  '/privacy',
-  '/terms',
+/** Public pages + Telegram webhook (uses its own secrets). */
+const isPublicRoute = createRouteMatcher([
+  '/',
+  '/sign-in(.*)',
+  '/sign-up(.*)',
+  '/login(.*)',
+  '/privacy(.*)',
+  '/terms(.*)',
   '/robots.txt',
   '/sitemap.xml',
-]
+  '/api/telegram-webhook(.*)',
+])
 
-export async function proxy(request: NextRequest) {
-  let response = NextResponse.next({ request })
+const isAuthPage = createRouteMatcher(['/sign-in(.*)', '/sign-up(.*)', '/login(.*)'])
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!url || !key) return response
-
-  const supabase = createServerClient(url, key, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll()
-      },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-        response = NextResponse.next({ request })
-        cookiesToSet.forEach(({ name, value, options }) =>
-          response.cookies.set(name, value, options),
-        )
-      },
-    },
-  })
-
-  // Refreshes the session cookie if expired; required on every request
-  const { data: { user } } = await supabase.auth.getUser()
-
+export default clerkMiddleware(async (auth, request) => {
   const path = request.nextUrl.pathname
-  // '/' is the public landing page — exact match only, never a prefix
-  const isPublic =
-    path === '/' || PUBLIC_PATHS.some((p) => path === p || path.startsWith(`${p}/`))
 
-  if (!user && !isPublic) {
-    const loginUrl = request.nextUrl.clone()
-    loginUrl.pathname = '/login'
-    loginUrl.search = ''
-    return NextResponse.redirect(loginUrl)
+  // Legacy /login → Clerk sign-in
+  if (path === '/login' || path.startsWith('/login/')) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/sign-in'
+    return NextResponse.redirect(url)
   }
 
-  if (user && (path === '/' || path === '/login')) {
-    const dashUrl = request.nextUrl.clone()
-    dashUrl.pathname = '/dashboard'
-    dashUrl.search = ''
-    return NextResponse.redirect(dashUrl)
+  if (!isPublicRoute(request)) {
+    await auth.protect()
   }
 
-  return response
-}
+  const { userId } = await auth()
+
+  // Signed-in users leave marketing / auth screens for the app
+  if (userId && (path === '/' || isAuthPage(request))) {
+    const dash = request.nextUrl.clone()
+    dash.pathname = '/dashboard'
+    dash.search = ''
+    return NextResponse.redirect(dash)
+  }
+
+  return NextResponse.next()
+})
 
 export const config = {
-  // Skip API routes (they do their own auth; the Telegram webhook must stay
-  // reachable by Telegram's servers), static assets, and image optimisation.
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)'],
+  matcher: [
+    // Skip Next internals and static files
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Always run for API routes
+    '/(api|trpc)(.*)',
+    // Clerk auto-proxy
+    '/__clerk/:path*',
+  ],
 }

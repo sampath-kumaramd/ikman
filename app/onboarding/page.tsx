@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Bricolage_Grotesque } from 'next/font/google'
 import { OnboardingWizard } from '@/components/OnboardingWizard'
-import { getAuthUser } from '@/lib/supabase-server'
+import { getAuthUser } from '@/lib/auth'
 import { getAdminClient } from '@/lib/supabase'
 import { getUserSettings } from '@/lib/db'
 import { cn } from '@/lib/utils'
@@ -16,10 +16,10 @@ export const metadata = { title: 'Set up – ikman Rental Tracker' }
 
 export default async function OnboardingPage() {
   const user = await getAuthUser()
-  if (!user) redirect('/login')
+  if (!user) redirect('/sign-in')
 
   const settings = await getUserSettings(getAdminClient(), user.id)
-  if (settings?.onboarding_completed) redirect('/')
+  if (settings?.onboarding_completed) redirect('/dashboard')
 
   return (
     <div

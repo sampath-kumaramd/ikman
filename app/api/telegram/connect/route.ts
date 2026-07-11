@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { getAdminClient } from '@/lib/supabase'
-import { getAuthUser } from '@/lib/supabase-server'
+import { getAuthUser } from '@/lib/auth'
 import { getUserSettings, upsertUserSettings } from '@/lib/db'
 import { getBotUsername } from '@/scraper/telegram'
 

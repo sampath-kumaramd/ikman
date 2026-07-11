@@ -1,0 +1,1571 @@
+{
+  "source": "https://ikman.lk/data/locations",
+  "version": "52f953ab277ed9493e92662ecac8fe08",
+  "fetchedAt": "2026-07-11T13:25:55.753Z",
+  "count": 309,
+  "popular": [
+    "Colombo",
+    "Nugegoda",
+    "Dehiwala",
+    "Mount Lavinia",
+    "Moratuwa",
+    "Kandy",
+    "Galle",
+    "Negombo",
+    "Maharagama",
+    "Battaramulla",
+    "Malabe",
+    "Kotte",
+    "Gampaha",
+    "Jaffna",
+    "Kurunegala",
+    "Matara"
+  ],
+  "areas": [
+    {
+      "name": "Akkarepattu",
+      "slug": "akkarepattu",
+      "district": "Ampara"
+    },
+    {
+      "name": "Ampara",
+      "slug": "ampara",
+      "district": "Ampara"
+    },
+    {
+      "name": "Ampara City",
+      "slug": "ampara-52",
+      "district": "Ampara"
+    },
+    {
+      "name": "Arugam Bay",
+      "slug": "arugam-bay",
+      "district": "Ampara"
+    },
+    {
+      "name": "Dehiattakandiya",
+      "slug": "dehiattakandiya",
+      "district": "Ampara"
+    },
+    {
+      "name": "Diyawiddagama",
+      "slug": "diyawiddagama",
+      "district": "Ampara"
+    },
+    {
+      "name": "Kalmunai",
+      "slug": "kalmunai",
+      "district": "Ampara"
+    },
+    {
+      "name": "Komari",
+      "slug": "komari",
+      "district": "Ampara"
+    },
+    {
+      "name": "Lahugala",
+      "slug": "lahugala",
+      "district": "Ampara"
+    },
+    {
+      "name": "Mawanagama",
+      "slug": "mawanagama",
+      "district": "Ampara"
+    },
+    {
+      "name": "Panama",
+      "slug": "panama",
+      "district": "Ampara"
+    },
+    {
+      "name": "Pottuvil",
+      "slug": "pottuvil",
+      "district": "Ampara"
+    },
+    {
+      "name": "Sainthamaruthu",
+      "slug": "sainthamaruthu",
+      "district": "Ampara"
+    },
+    {
+      "name": "Anuradhapura",
+      "slug": "anuradhapura",
+      "district": "Anuradhapura"
+    },
+    {
+      "name": "Anuradhapura City",
+      "slug": "anuradhapura-71",
+      "district": "Anuradhapura"
+    },
+    {
+      "name": "Eppawala",
+      "slug": "eppawala",
+      "district": "Anuradhapura"
+    },
+    {
+      "name": "Galenbindunuwewa",
+      "slug": "galenbindunuwewa",
+      "district": "Anuradhapura"
+    },
+    {
+      "name": "Galnewa",
+      "slug": "galnewa",
+      "district": "Anuradhapura"
+    },
+    {
+      "name": "Habarana",
+      "slug": "habarana",
+      "district": "Anuradhapura"
+    },
+    {
+      "name": "Kekirawa",
+      "slug": "kekirawa",
+      "district": "Anuradhapura"
+    },
+    {
+      "name": "Medawachchiya",
+      "slug": "medawachchiya",
+      "district": "Anuradhapura"
+    },
+    {
+      "name": "Mihintale",
+      "slug": "mihintale",
+      "district": "Anuradhapura"
+    },
+    {
+      "name": "Nochchiyagama",
+      "slug": "nochchiyagama",
+      "district": "Anuradhapura"
+    },
+    {
+      "name": "Talawa",
+      "slug": "talawa",
+      "district": "Anuradhapura"
+    },
+    {
+      "name": "Tambuttegama",
+      "slug": "tambuttegama",
+      "district": "Anuradhapura"
+    },
+    {
+      "name": "Badulla",
+      "slug": "badulla",
+      "district": "Badulla"
+    },
+    {
+      "name": "Badulla City",
+      "slug": "badulla-81",
+      "district": "Badulla"
+    },
+    {
+      "name": "Bandarawela",
+      "slug": "bandarawela",
+      "district": "Badulla"
+    },
+    {
+      "name": "Diyatalawa",
+      "slug": "diyatalawa",
+      "district": "Badulla"
+    },
+    {
+      "name": "Ella",
+      "slug": "ella",
+      "district": "Badulla"
+    },
+    {
+      "name": "Hali Ela",
+      "slug": "hali-ela",
+      "district": "Badulla"
+    },
+    {
+      "name": "Haputale",
+      "slug": "haputale",
+      "district": "Badulla"
+    },
+    {
+      "name": "Mahiyanganaya",
+      "slug": "mahiyanganaya",
+      "district": "Badulla"
+    },
+    {
+      "name": "Passara",
+      "slug": "passara",
+      "district": "Badulla"
+    },
+    {
+      "name": "Rideemaliyadda",
+      "slug": "rideemaliyadda",
+      "district": "Badulla"
+    },
+    {
+      "name": "Welimada",
+      "slug": "welimada",
+      "district": "Badulla"
+    },
+    {
+      "name": "Batticaloa",
+      "slug": "batticaloa",
+      "district": "Batticaloa"
+    },
+    {
+      "name": "Batticaloa City",
+      "slug": "batticaloa-51",
+      "district": "Batticaloa"
+    },
+    {
+      "name": "Angoda",
+      "slug": "angoda",
+      "district": "Colombo"
+    },
+    {
+      "name": "Athurugiriya",
+      "slug": "athurugiriya",
+      "district": "Colombo"
+    },
+    {
+      "name": "Avissawella",
+      "slug": "avissawella",
+      "district": "Colombo"
+    },
+    {
+      "name": "Battaramulla",
+      "slug": "battaramulla",
+      "district": "Colombo"
+    },
+    {
+      "name": "Boralesgamuwa",
+      "slug": "boralesgamuwa",
+      "district": "Colombo"
+    },
+    {
+      "name": "Colombo",
+      "slug": "colombo",
+      "district": "Colombo"
+    },
+    {
+      "name": "Colombo 1",
+      "slug": "colombo-1",
+      "district": "Colombo"
+    },
+    {
+      "name": "Colombo 10",
+      "slug": "colombo-10",
+      "district": "Colombo"
+    },
+    {
+      "name": "Colombo 11",
+      "slug": "colombo-11",
+      "district": "Colombo"
+    },
+    {
+      "name": "Colombo 12",
+      "slug": "colombo-12",
+      "district": "Colombo"
+    },
+    {
+      "name": "Colombo 13",
+      "slug": "colombo-13",
+      "district": "Colombo"
+    },
+    {
+      "name": "Colombo 14",
+      "slug": "colombo-14",
+      "district": "Colombo"
+    },
+    {
+      "name": "Colombo 15",
+      "slug": "colombo-15",
+      "district": "Colombo"
+    },
+    {
+      "name": "Colombo 2",
+      "slug": "colombo-2",
+      "district": "Colombo"
+    },
+    {
+      "name": "Colombo 3",
+      "slug": "colombo-3",
+      "district": "Colombo"
+    },
+    {
+      "name": "Colombo 4",
+      "slug": "colombo-4",
+      "district": "Colombo"
+    },
+    {
+      "name": "Colombo 5",
+      "slug": "colombo-5",
+      "district": "Colombo"
+    },
+    {
+      "name": "Colombo 6",
+      "slug": "colombo-6",
+      "district": "Colombo"
+    },
+    {
+      "name": "Colombo 7",
+      "slug": "colombo-7",
+      "district": "Colombo"
+    },
+    {
+      "name": "Colombo 8",
+      "slug": "colombo-8",
+      "district": "Colombo"
+    },
+    {
+      "name": "Colombo 9",
+      "slug": "colombo-9",
+      "district": "Colombo"
+    },
+    {
+      "name": "Dehiwala",
+      "slug": "dehiwala",
+      "district": "Colombo"
+    },
+    {
+      "name": "Embulgama",
+      "slug": "embulgama",
+      "district": "Colombo"
+    },
+    {
+      "name": "Godagama",
+      "slug": "godagama",
+      "district": "Colombo"
+    },
+    {
+      "name": "Hanwella",
+      "slug": "hanwella",
+      "district": "Colombo"
+    },
+    {
+      "name": "Homagama",
+      "slug": "homagama",
+      "district": "Colombo"
+    },
+    {
+      "name": "Kaduwela",
+      "slug": "kaduwela",
+      "district": "Colombo"
+    },
+    {
+      "name": "Kalubowila",
+      "slug": "kalubowila",
+      "district": "Colombo"
+    },
+    {
+      "name": "Kesbewa",
+      "slug": "kesbewa",
+      "district": "Colombo"
+    },
+    {
+      "name": "Kohuwala",
+      "slug": "kohuwala",
+      "district": "Colombo"
+    },
+    {
+      "name": "Kolonnawa",
+      "slug": "kolonnawa",
+      "district": "Colombo"
+    },
+    {
+      "name": "Kotikawatta",
+      "slug": "kotikawatta",
+      "district": "Colombo"
+    },
+    {
+      "name": "Kottawa",
+      "slug": "kottawa",
+      "district": "Colombo"
+    },
+    {
+      "name": "Kotte",
+      "slug": "kotte",
+      "district": "Colombo"
+    },
+    {
+      "name": "Maharagama",
+      "slug": "maharagama",
+      "district": "Colombo"
+    },
+    {
+      "name": "Malabe",
+      "slug": "malabe",
+      "district": "Colombo"
+    },
+    {
+      "name": "Meegoda",
+      "slug": "meegoda",
+      "district": "Colombo"
+    },
+    {
+      "name": "Moratuwa",
+      "slug": "moratuwa",
+      "district": "Colombo"
+    },
+    {
+      "name": "Mount Lavinia",
+      "slug": "mount-lavinia",
+      "district": "Colombo"
+    },
+    {
+      "name": "Nawagamuwa",
+      "slug": "nawagamuwa",
+      "district": "Colombo"
+    },
+    {
+      "name": "Nawala",
+      "slug": "nawala",
+      "district": "Colombo"
+    },
+    {
+      "name": "Nugegoda",
+      "slug": "nugegoda",
+      "district": "Colombo"
+    },
+    {
+      "name": "Olaboduwa",
+      "slug": "olaboduwa",
+      "district": "Colombo"
+    },
+    {
+      "name": "Padukka",
+      "slug": "padukka",
+      "district": "Colombo"
+    },
+    {
+      "name": "Pannipitiya",
+      "slug": "pannipitiya",
+      "district": "Colombo"
+    },
+    {
+      "name": "Piliyandala",
+      "slug": "piliyandala",
+      "district": "Colombo"
+    },
+    {
+      "name": "Polgasowita",
+      "slug": "polgasowita",
+      "district": "Colombo"
+    },
+    {
+      "name": "Rajagiriya",
+      "slug": "rajagiriya",
+      "district": "Colombo"
+    },
+    {
+      "name": "Ranala",
+      "slug": "ranala",
+      "district": "Colombo"
+    },
+    {
+      "name": "Ratmalana",
+      "slug": "ratmalana",
+      "district": "Colombo"
+    },
+    {
+      "name": "Talawatugoda",
+      "slug": "talawatugoda",
+      "district": "Colombo"
+    },
+    {
+      "name": "Wellampitiya",
+      "slug": "wellampitiya",
+      "district": "Colombo"
+    },
+    {
+      "name": "Ahangama",
+      "slug": "ahangama",
+      "district": "Galle"
+    },
+    {
+      "name": "Ahungalla",
+      "slug": "ahungalla",
+      "district": "Galle"
+    },
+    {
+      "name": "Ambalangoda",
+      "slug": "ambalangoda",
+      "district": "Galle"
+    },
+    {
+      "name": "Atakohota",
+      "slug": "atakohota",
+      "district": "Galle"
+    },
+    {
+      "name": "Baddegama",
+      "slug": "baddegama",
+      "district": "Galle"
+    },
+    {
+      "name": "Balapitiya",
+      "slug": "balapitiya",
+      "district": "Galle"
+    },
+    {
+      "name": "Batapola",
+      "slug": "batapola",
+      "district": "Galle"
+    },
+    {
+      "name": "Bentota",
+      "slug": "bentota",
+      "district": "Galle"
+    },
+    {
+      "name": "Elpitiya",
+      "slug": "elpitiya",
+      "district": "Galle"
+    },
+    {
+      "name": "Galle",
+      "slug": "galle",
+      "district": "Galle"
+    },
+    {
+      "name": "Galle City",
+      "slug": "galle-31",
+      "district": "Galle"
+    },
+    {
+      "name": "Hikkaduwa",
+      "slug": "hikkaduwa",
+      "district": "Galle"
+    },
+    {
+      "name": "Karandeniya",
+      "slug": "karandeniya",
+      "district": "Galle"
+    },
+    {
+      "name": "Karapitiya",
+      "slug": "karapitiya",
+      "district": "Galle"
+    },
+    {
+      "name": "Kosgoda",
+      "slug": "kosgoda",
+      "district": "Galle"
+    },
+    {
+      "name": "Neluwa",
+      "slug": "neluwa",
+      "district": "Galle"
+    },
+    {
+      "name": "Opatha",
+      "slug": "opatha",
+      "district": "Galle"
+    },
+    {
+      "name": "Thangalla",
+      "slug": "thangalla",
+      "district": "Galle"
+    },
+    {
+      "name": "Uragasmanhandiya",
+      "slug": "uragasmanhandiya",
+      "district": "Galle"
+    },
+    {
+      "name": "Biyagama",
+      "slug": "biyagama",
+      "district": "Gampaha"
+    },
+    {
+      "name": "Bopitiya",
+      "slug": "bopitiya",
+      "district": "Gampaha"
+    },
+    {
+      "name": "Delathura",
+      "slug": "delathura",
+      "district": "Gampaha"
+    },
+    {
+      "name": "Delgoda",
+      "slug": "delgoda",
+      "district": "Gampaha"
+    },
+    {
+      "name": "Divulapitiya",
+      "slug": "divulapitiya",
+      "district": "Gampaha"
+    },
+    {
+      "name": "Dompe",
+      "slug": "dompe",
+      "district": "Gampaha"
+    },
+    {
+      "name": "Gampaha",
+      "slug": "gampaha",
+      "district": "Gampaha"
+    },
+    {
+      "name": "Gampaha City",
+      "slug": "gampaha-12",
+      "district": "Gampaha"
+    },
+    {
+      "name": "Ganemulla",
+      "slug": "ganemulla",
+      "district": "Gampaha"
+    },
+    {
+      "name": "Gonawala",
+      "slug": "gonawala",
+      "district": "Gampaha"
+    },
+    {
+      "name": "Ja-Ela",
+      "slug": "ja-ela",
+      "district": "Gampaha"
+    },
+    {
+      "name": "Kadawatha",
+      "slug": "kadawatha",
+      "district": "Gampaha"
+    },
+    {
+      "name": "Kalagedihena",
+      "slug": "kalagedihena",
+      "district": "Gampaha"
+    },
+    {
+      "name": "Kandana",
+      "slug": "kandana",
+      "district": "Gampaha"
+    },
+    {
+      "name": "Katunayake",
+      "slug": "katunayake",
+      "district": "Gampaha"
+    },
+    {
+      "name": "Kelaniya",
+      "slug": "kelaniya",
+      "district": "Gampaha"
+    },
+    {
+      "name": "Kiribathgoda",
+      "slug": "kiribathgoda",
+      "district": "Gampaha"
+    },
+    {
+      "name": "Kirindiwela",
+      "slug": "kirindiwela",
+      "district": "Gampaha"
+    },
+    {
+      "name": "Mawaramandiya",
+      "slug": "mawaramandiya",
+      "district": "Gampaha"
+    },
+    {
+      "name": "Minuwangoda",
+      "slug": "minuwangoda",
+      "district": "Gampaha"
+    },
+    {
+      "name": "Mirigama",
+      "slug": "mirigama",
+      "district": "Gampaha"
+    },
+    {
+      "name": "Miriswatta",
+      "slug": "miriswatta",
+      "district": "Gampaha"
+    },
+    {
+      "name": "Negombo",
+      "slug": "negombo",
+      "district": "Gampaha"
+    },
+    {
+      "name": "Nilsirigama",
+      "slug": "nilsirigama",
+      "district": "Gampaha"
+    },
+    {
+      "name": "Nittambuwa",
+      "slug": "nittambuwa",
+      "district": "Gampaha"
+    },
+    {
+      "name": "Peliyagoda",
+      "slug": "peliyagoda",
+      "district": "Gampaha"
+    },
+    {
+      "name": "Pugoda",
+      "slug": "pugoda",
+      "district": "Gampaha"
+    },
+    {
+      "name": "Ragama",
+      "slug": "ragama",
+      "district": "Gampaha"
+    },
+    {
+      "name": "Seeduwa",
+      "slug": "seeduwa",
+      "district": "Gampaha"
+    },
+    {
+      "name": "Veyangoda",
+      "slug": "veyangoda",
+      "district": "Gampaha"
+    },
+    {
+      "name": "Walikatiya",
+      "slug": "walikatiya",
+      "district": "Gampaha"
+    },
+    {
+      "name": "Wattala",
+      "slug": "wattala",
+      "district": "Gampaha"
+    },
+    {
+      "name": "Ambalantota",
+      "slug": "ambalantota",
+      "district": "Hambantota"
+    },
+    {
+      "name": "Beliatta",
+      "slug": "beliatta",
+      "district": "Hambantota"
+    },
+    {
+      "name": "Hambantota",
+      "slug": "hambantota",
+      "district": "Hambantota"
+    },
+    {
+      "name": "Hambantota City",
+      "slug": "hambantota-33",
+      "district": "Hambantota"
+    },
+    {
+      "name": "Tangalla",
+      "slug": "tangalla",
+      "district": "Hambantota"
+    },
+    {
+      "name": "Tissamaharama",
+      "slug": "tissamaharama",
+      "district": "Hambantota"
+    },
+    {
+      "name": "Chavakachcheri",
+      "slug": "chavakachcheri",
+      "district": "Jaffna"
+    },
+    {
+      "name": "Jaffna",
+      "slug": "jaffna",
+      "district": "Jaffna"
+    },
+    {
+      "name": "Jaffna City",
+      "slug": "jaffna-41",
+      "district": "Jaffna"
+    },
+    {
+      "name": "Nallur",
+      "slug": "nallur",
+      "district": "Jaffna"
+    },
+    {
+      "name": "Alutgama",
+      "slug": "alutgama",
+      "district": "Kalutara"
+    },
+    {
+      "name": "Awittawa",
+      "slug": "awittawa",
+      "district": "Kalutara"
+    },
+    {
+      "name": "Bandaragama",
+      "slug": "bandaragama",
+      "district": "Kalutara"
+    },
+    {
+      "name": "Beruwala",
+      "slug": "beruwala",
+      "district": "Kalutara"
+    },
+    {
+      "name": "Gonapola",
+      "slug": "gonapola",
+      "district": "Kalutara"
+    },
+    {
+      "name": "Horana",
+      "slug": "horana",
+      "district": "Kalutara"
+    },
+    {
+      "name": "Ingiriya",
+      "slug": "ingiriya",
+      "district": "Kalutara"
+    },
+    {
+      "name": "Ittapane",
+      "slug": "ittapane",
+      "district": "Kalutara"
+    },
+    {
+      "name": "Kalutara",
+      "slug": "kalutara",
+      "district": "Kalutara"
+    },
+    {
+      "name": "Kalutara City",
+      "slug": "kalutara-13",
+      "district": "Kalutara"
+    },
+    {
+      "name": "Kevitiyagala",
+      "slug": "kevitiyagala",
+      "district": "Kalutara"
+    },
+    {
+      "name": "Matugama",
+      "slug": "matugama",
+      "district": "Kalutara"
+    },
+    {
+      "name": "Meegahathenna",
+      "slug": "meegahathenna",
+      "district": "Kalutara"
+    },
+    {
+      "name": "Moragala",
+      "slug": "moragala",
+      "district": "Kalutara"
+    },
+    {
+      "name": "Panadura",
+      "slug": "panadura",
+      "district": "Kalutara"
+    },
+    {
+      "name": "Pitipana",
+      "slug": "pitipana",
+      "district": "Kalutara"
+    },
+    {
+      "name": "Polgampola",
+      "slug": "polgampola",
+      "district": "Kalutara"
+    },
+    {
+      "name": "Talagala",
+      "slug": "talagala",
+      "district": "Kalutara"
+    },
+    {
+      "name": "Uthumgama",
+      "slug": "uthumgama",
+      "district": "Kalutara"
+    },
+    {
+      "name": "Wadduwa",
+      "slug": "wadduwa",
+      "district": "Kalutara"
+    },
+    {
+      "name": "Walallavita",
+      "slug": "walallavita",
+      "district": "Kalutara"
+    },
+    {
+      "name": "Akurana",
+      "slug": "akurana",
+      "district": "Kandy"
+    },
+    {
+      "name": "Ampitiya",
+      "slug": "ampitiya",
+      "district": "Kandy"
+    },
+    {
+      "name": "Danthure",
+      "slug": "danthure",
+      "district": "Kandy"
+    },
+    {
+      "name": "Deltota",
+      "slug": "deltota",
+      "district": "Kandy"
+    },
+    {
+      "name": "Digana",
+      "slug": "digana",
+      "district": "Kandy"
+    },
+    {
+      "name": "Dodamwala",
+      "slug": "dodamwala",
+      "district": "Kandy"
+    },
+    {
+      "name": "Doluwa",
+      "slug": "doluwa",
+      "district": "Kandy"
+    },
+    {
+      "name": "Galagedara",
+      "slug": "galagedara",
+      "district": "Kandy"
+    },
+    {
+      "name": "Galaha",
+      "slug": "galaha",
+      "district": "Kandy"
+    },
+    {
+      "name": "Gampola",
+      "slug": "gampola",
+      "district": "Kandy"
+    },
+    {
+      "name": "Gelioya",
+      "slug": "gelioya",
+      "district": "Kandy"
+    },
+    {
+      "name": "Kadugannawa",
+      "slug": "kadugannawa",
+      "district": "Kandy"
+    },
+    {
+      "name": "Kandy",
+      "slug": "kandy",
+      "district": "Kandy"
+    },
+    {
+      "name": "Kandy City",
+      "slug": "kandy-21",
+      "district": "Kandy"
+    },
+    {
+      "name": "Katugastota",
+      "slug": "katugastota",
+      "district": "Kandy"
+    },
+    {
+      "name": "Kundasale",
+      "slug": "kundasale",
+      "district": "Kandy"
+    },
+    {
+      "name": "Madawala Bazaar",
+      "slug": "madawala-bazaar",
+      "district": "Kandy"
+    },
+    {
+      "name": "Menikhinna",
+      "slug": "menikhinna",
+      "district": "Kandy"
+    },
+    {
+      "name": "Nawalapitiya",
+      "slug": "nawalapitiya",
+      "district": "Kandy"
+    },
+    {
+      "name": "Pallekele",
+      "slug": "pallekele",
+      "district": "Kandy"
+    },
+    {
+      "name": "Pathahewaheta",
+      "slug": "pathahewaheta",
+      "district": "Kandy"
+    },
+    {
+      "name": "Peradeniya",
+      "slug": "peradeniya",
+      "district": "Kandy"
+    },
+    {
+      "name": "Pilimatalawa",
+      "slug": "pilimatalawa",
+      "district": "Kandy"
+    },
+    {
+      "name": "Poththapitiya",
+      "slug": "poththapitiya",
+      "district": "Kandy"
+    },
+    {
+      "name": "Pussellawa",
+      "slug": "pussellawa",
+      "district": "Kandy"
+    },
+    {
+      "name": "Rattapitiya",
+      "slug": "rattapitiya",
+      "district": "Kandy"
+    },
+    {
+      "name": "Tawalantenne",
+      "slug": "tawalantenne",
+      "district": "Kandy"
+    },
+    {
+      "name": "Udunuwara",
+      "slug": "udunuwara",
+      "district": "Kandy"
+    },
+    {
+      "name": "Urapola",
+      "slug": "urapola",
+      "district": "Kandy"
+    },
+    {
+      "name": "Wattegama",
+      "slug": "wattegama",
+      "district": "Kandy"
+    },
+    {
+      "name": "Dehiowita",
+      "slug": "dehiowita",
+      "district": "Kegalle"
+    },
+    {
+      "name": "Deraniyagala",
+      "slug": "deraniyagala",
+      "district": "Kegalle"
+    },
+    {
+      "name": "Dodammuluwa",
+      "slug": "dodammuluwa",
+      "district": "Kegalle"
+    },
+    {
+      "name": "Galigamuwa",
+      "slug": "galigamuwa",
+      "district": "Kegalle"
+    },
+    {
+      "name": "Hemmathagama",
+      "slug": "hemmathagama",
+      "district": "Kegalle"
+    },
+    {
+      "name": "Kegalle",
+      "slug": "kegalle",
+      "district": "Kegalle"
+    },
+    {
+      "name": "Kegalle City",
+      "slug": "kegalle-92",
+      "district": "Kegalle"
+    },
+    {
+      "name": "Kitulgala",
+      "slug": "kitulgala",
+      "district": "Kegalle"
+    },
+    {
+      "name": "Mawanella",
+      "slug": "mawanella",
+      "district": "Kegalle"
+    },
+    {
+      "name": "Rambukkana",
+      "slug": "rambukkana",
+      "district": "Kegalle"
+    },
+    {
+      "name": "Ruwanwella",
+      "slug": "ruwanwella",
+      "district": "Kegalle"
+    },
+    {
+      "name": "Warakapola",
+      "slug": "warakapola",
+      "district": "Kegalle"
+    },
+    {
+      "name": "Yatiyantota",
+      "slug": "yatiyantota",
+      "district": "Kegalle"
+    },
+    {
+      "name": "Kilinochchi",
+      "slug": "kilinochchi",
+      "district": "Kilinochchi"
+    },
+    {
+      "name": "Kilinochchi City",
+      "slug": "kilinochchi-42",
+      "district": "Kilinochchi"
+    },
+    {
+      "name": "Alawwa",
+      "slug": "alawwa",
+      "district": "Kurunegala"
+    },
+    {
+      "name": "Bingiriya",
+      "slug": "bingiriya",
+      "district": "Kurunegala"
+    },
+    {
+      "name": "Galgamuwa",
+      "slug": "galgamuwa",
+      "district": "Kurunegala"
+    },
+    {
+      "name": "Giriulla",
+      "slug": "giriulla",
+      "district": "Kurunegala"
+    },
+    {
+      "name": "Hettipola",
+      "slug": "hettipola",
+      "district": "Kurunegala"
+    },
+    {
+      "name": "Ibbagamuwa",
+      "slug": "ibbagamuwa",
+      "district": "Kurunegala"
+    },
+    {
+      "name": "Kuliyapitiya",
+      "slug": "kuliyapitiya",
+      "district": "Kurunegala"
+    },
+    {
+      "name": "Kurunegala",
+      "slug": "kurunegala",
+      "district": "Kurunegala"
+    },
+    {
+      "name": "Kurunegala City",
+      "slug": "kurunegala-61",
+      "district": "Kurunegala"
+    },
+    {
+      "name": "Mawathagama",
+      "slug": "mawathagama",
+      "district": "Kurunegala"
+    },
+    {
+      "name": "Moonamale",
+      "slug": "moonamale",
+      "district": "Kurunegala"
+    },
+    {
+      "name": "Narammala",
+      "slug": "narammala",
+      "district": "Kurunegala"
+    },
+    {
+      "name": "Nikaweratiya",
+      "slug": "nikaweratiya",
+      "district": "Kurunegala"
+    },
+    {
+      "name": "Pannala",
+      "slug": "pannala",
+      "district": "Kurunegala"
+    },
+    {
+      "name": "Polgahawela",
+      "slug": "polgahawela",
+      "district": "Kurunegala"
+    },
+    {
+      "name": "Wariyapola",
+      "slug": "wariyapola",
+      "district": "Kurunegala"
+    },
+    {
+      "name": "Mannar",
+      "slug": "mannar",
+      "district": "Mannar"
+    },
+    {
+      "name": "Mannar City",
+      "slug": "mannar-43",
+      "district": "Mannar"
+    },
+    {
+      "name": "Dambulla",
+      "slug": "dambulla",
+      "district": "Matale"
+    },
+    {
+      "name": "Galewela",
+      "slug": "galewela",
+      "district": "Matale"
+    },
+    {
+      "name": "Matale",
+      "slug": "matale",
+      "district": "Matale"
+    },
+    {
+      "name": "Matale City",
+      "slug": "matale-22",
+      "district": "Matale"
+    },
+    {
+      "name": "Palapathwela",
+      "slug": "palapathwela",
+      "district": "Matale"
+    },
+    {
+      "name": "Pallepola",
+      "slug": "pallepola",
+      "district": "Matale"
+    },
+    {
+      "name": "Rattota",
+      "slug": "rattota",
+      "district": "Matale"
+    },
+    {
+      "name": "Sigiriya",
+      "slug": "sigiriya",
+      "district": "Matale"
+    },
+    {
+      "name": "Ukuwela",
+      "slug": "ukuwela",
+      "district": "Matale"
+    },
+    {
+      "name": "Yatawatta",
+      "slug": "yatawatta",
+      "district": "Matale"
+    },
+    {
+      "name": "Akuressa",
+      "slug": "akuressa",
+      "district": "Matara"
+    },
+    {
+      "name": "Deniyaya",
+      "slug": "deniyaya",
+      "district": "Matara"
+    },
+    {
+      "name": "Dikwella",
+      "slug": "dikwella",
+      "district": "Matara"
+    },
+    {
+      "name": "Gandara",
+      "slug": "gandara",
+      "district": "Matara"
+    },
+    {
+      "name": "Hakmana",
+      "slug": "hakmana",
+      "district": "Matara"
+    },
+    {
+      "name": "Kadihingala",
+      "slug": "kadihingala",
+      "district": "Matara"
+    },
+    {
+      "name": "Kamburugamuwa",
+      "slug": "kamburugamuwa",
+      "district": "Matara"
+    },
+    {
+      "name": "Kamburupitiya",
+      "slug": "kamburupitiya",
+      "district": "Matara"
+    },
+    {
+      "name": "Kekanadurra",
+      "slug": "kekanadurra",
+      "district": "Matara"
+    },
+    {
+      "name": "Matara",
+      "slug": "matara",
+      "district": "Matara"
+    },
+    {
+      "name": "Matara City",
+      "slug": "matara-32",
+      "district": "Matara"
+    },
+    {
+      "name": "Weligama",
+      "slug": "weligama",
+      "district": "Matara"
+    },
+    {
+      "name": "Bibile",
+      "slug": "bibile",
+      "district": "Monaragala"
+    },
+    {
+      "name": "Buttala",
+      "slug": "buttala",
+      "district": "Monaragala"
+    },
+    {
+      "name": "Kataragama",
+      "slug": "kataragama",
+      "district": "Monaragala"
+    },
+    {
+      "name": "Monaragala",
+      "slug": "monaragala",
+      "district": "Monaragala"
+    },
+    {
+      "name": "Monaragala City",
+      "slug": "monaragala-82",
+      "district": "Monaragala"
+    },
+    {
+      "name": "Wellawaya",
+      "slug": "wellawaya",
+      "district": "Monaragala"
+    },
+    {
+      "name": "Mullativu",
+      "slug": "mullativu",
+      "district": "Mullativu"
+    },
+    {
+      "name": "Mullativu City",
+      "slug": "mullativu-45",
+      "district": "Mullativu"
+    },
+    {
+      "name": "Arukwatta",
+      "slug": "arukwatta",
+      "district": "Nuwara Eliya"
+    },
+    {
+      "name": "Ginigathhena",
+      "slug": "ginigathhena",
+      "district": "Nuwara Eliya"
+    },
+    {
+      "name": "Hatton",
+      "slug": "hatton",
+      "district": "Nuwara Eliya"
+    },
+    {
+      "name": "Karametiya",
+      "slug": "karametiya",
+      "district": "Nuwara Eliya"
+    },
+    {
+      "name": "Kotmale",
+      "slug": "kotmale",
+      "district": "Nuwara Eliya"
+    },
+    {
+      "name": "Madulla",
+      "slug": "madulla",
+      "district": "Nuwara Eliya"
+    },
+    {
+      "name": "Nuwara Eliya",
+      "slug": "nuwara-eliya",
+      "district": "Nuwara Eliya"
+    },
+    {
+      "name": "Nuwara Eliya City",
+      "slug": "nuwara-eliya-23",
+      "district": "Nuwara Eliya"
+    },
+    {
+      "name": "Ramboda",
+      "slug": "ramboda",
+      "district": "Nuwara Eliya"
+    },
+    {
+      "name": "Rikillagaskada",
+      "slug": "rikillagaskada",
+      "district": "Nuwara Eliya"
+    },
+    {
+      "name": "Udapalatha",
+      "slug": "udapalatha",
+      "district": "Nuwara Eliya"
+    },
+    {
+      "name": "Walapane",
+      "slug": "walapane",
+      "district": "Nuwara Eliya"
+    },
+    {
+      "name": "Hingurakgoda",
+      "slug": "hingurakgoda",
+      "district": "Polonnaruwa"
+    },
+    {
+      "name": "Kaduruwela",
+      "slug": "kaduruwela",
+      "district": "Polonnaruwa"
+    },
+    {
+      "name": "Medirigiriya",
+      "slug": "medirigiriya",
+      "district": "Polonnaruwa"
+    },
+    {
+      "name": "Polonnaruwa",
+      "slug": "polonnaruwa",
+      "district": "Polonnaruwa"
+    },
+    {
+      "name": "Polonnaruwa City",
+      "slug": "polonnaruwa-72",
+      "district": "Polonnaruwa"
+    },
+    {
+      "name": "Anamaduwa",
+      "slug": "anamaduwa",
+      "district": "Puttalam"
+    },
+    {
+      "name": "Chilaw",
+      "slug": "chilaw",
+      "district": "Puttalam"
+    },
+    {
+      "name": "Dankotuwa",
+      "slug": "dankotuwa",
+      "district": "Puttalam"
+    },
+    {
+      "name": "Marawila",
+      "slug": "marawila",
+      "district": "Puttalam"
+    },
+    {
+      "name": "Nattandiya",
+      "slug": "nattandiya",
+      "district": "Puttalam"
+    },
+    {
+      "name": "Puttalam",
+      "slug": "puttalam",
+      "district": "Puttalam"
+    },
+    {
+      "name": "Puttalam City",
+      "slug": "puttalam-62",
+      "district": "Puttalam"
+    },
+    {
+      "name": "Wennappuwa",
+      "slug": "wennappuwa",
+      "district": "Puttalam"
+    },
+    {
+      "name": "Balangoda",
+      "slug": "balangoda",
+      "district": "Ratnapura"
+    },
+    {
+      "name": "Botiyatenna",
+      "slug": "botiyatenna",
+      "district": "Ratnapura"
+    },
+    {
+      "name": "Eheliyagoda",
+      "slug": "eheliyagoda",
+      "district": "Ratnapura"
+    },
+    {
+      "name": "Embilipitiya",
+      "slug": "embilipitiya",
+      "district": "Ratnapura"
+    },
+    {
+      "name": "Kahawatta",
+      "slug": "kahawatta",
+      "district": "Ratnapura"
+    },
+    {
+      "name": "Karawita",
+      "slug": "karawita",
+      "district": "Ratnapura"
+    },
+    {
+      "name": "Kuruwita",
+      "slug": "kuruwita",
+      "district": "Ratnapura"
+    },
+    {
+      "name": "Madalagama",
+      "slug": "madalagama",
+      "district": "Ratnapura"
+    },
+    {
+      "name": "Nivithigala",
+      "slug": "nivithigala",
+      "district": "Ratnapura"
+    },
+    {
+      "name": "Pelmadulla",
+      "slug": "pelmadulla",
+      "district": "Ratnapura"
+    },
+    {
+      "name": "Ratnapura",
+      "slug": "ratnapura",
+      "district": "Ratnapura"
+    },
+    {
+      "name": "Ratnapura City",
+      "slug": "ratnapura-91",
+      "district": "Ratnapura"
+    },
+    {
+      "name": "Watapotha",
+      "slug": "watapotha",
+      "district": "Ratnapura"
+    },
+    {
+      "name": "Weddagala",
+      "slug": "weddagala",
+      "district": "Ratnapura"
+    },
+    {
+      "name": "Kinniya",
+      "slug": "kinniya",
+      "district": "Trincomalee"
+    },
+    {
+      "name": "Trincomalee",
+      "slug": "trincomalee",
+      "district": "Trincomalee"
+    },
+    {
+      "name": "Trincomalee City",
+      "slug": "trincomalee-53",
+      "district": "Trincomalee"
+    },
+    {
+      "name": "Vavuniya",
+      "slug": "vavuniya",
+      "district": "Vavuniya"
+    },
+    {
+      "name": "Vavuniya City",
+      "slug": "vavuniya-44",
+      "district": "Vavuniya"
+    }
+  ]
+}

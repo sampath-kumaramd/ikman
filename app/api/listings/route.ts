@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminClient } from '@/lib/supabase'
-import { getAuthUser } from '@/lib/supabase-server'
+import { getAuthUser } from '@/lib/auth'
 import {
   getListingsForUser, getUserSettings, markListingsViewed, setListingViewed,
 } from '@/lib/db'

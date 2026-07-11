@@ -3,13 +3,13 @@ import Link from 'next/link'
 import { Settings } from 'lucide-react'
 import { NotificationBell } from '@/components/NotificationBell'
 import { UserMenu } from '@/components/UserMenu'
-import { getAuthUser } from '@/lib/supabase-server'
+import { getAuthUser } from '@/lib/auth'
 import { getAdminClient } from '@/lib/supabase'
 import { getUserSettings } from '@/lib/db'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await getAuthUser()
-  if (!user) redirect('/login')
+  if (!user) redirect('/sign-in')
 
   // First sign-in (or unfinished setup): force the onboarding wizard
   const settings = await getUserSettings(getAdminClient(), user.id)

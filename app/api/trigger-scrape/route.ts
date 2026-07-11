@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getAuthUser } from '@/lib/supabase-server'
+import { getAuthUser } from '@/lib/auth'
 import { getAdminClient } from '@/lib/supabase'
 import { triggerScrape } from '@/lib/trigger-scrape'
 

@@ -8,31 +8,18 @@ import { StatsStrip } from './StatsStrip'
 import { AreasMarquee } from './AreasMarquee'
 import { FinalCTA } from './FinalCTA'
 
-const NOISE_SVG =
-  "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>\")"
-
 interface LandingPageProps {
-  /** next/font variable class for the display typeface */
   fontVariable: string
 }
 
 export function LandingPage({ fontVariable }: LandingPageProps) {
   return (
-    // `dark` scopes the shadcn dark tokens to the landing page only —
-    // the rest of the app stays on the light theme.
     <div
       className={cn(
-        'dark min-h-screen overflow-x-hidden bg-[#07090f] text-foreground antialiased',
+        'dark min-h-screen overflow-x-hidden bg-[#06080d] text-zinc-100 antialiased',
         fontVariable,
       )}
     >
-      {/* film-grain overlay for atmosphere */}
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 z-[60] opacity-[0.035] mix-blend-soft-light"
-        style={{ backgroundImage: NOISE_SVG }}
-      />
-
       <LandingNav />
       <main>
         <Hero />
@@ -43,19 +30,75 @@ export function LandingPage({ fontVariable }: LandingPageProps) {
         <FinalCTA />
       </main>
 
-      <footer className="relative z-10 border-t border-white/5 px-4 py-10 text-center text-xs text-zinc-600">
-        <p className="text-zinc-500">
-          Independent house-hunting tool · not affiliated with ikman.lk
-        </p>
-        <p className="mt-2">
-          <Link href="/privacy" className="hover:text-zinc-400">
-            Privacy
-          </Link>
-          <span className="mx-2 text-zinc-700">·</span>
-          <Link href="/terms" className="hover:text-zinc-400">
-            Terms
-          </Link>
-        </p>
+      <footer className="border-t border-white/[0.06]">
+        <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-12 sm:px-6 lg:flex-row lg:items-start lg:justify-between">
+          <div className="max-w-xs space-y-3">
+            <div className="flex items-center gap-2.5">
+              <span
+                className="flex size-8 items-center justify-center rounded-lg bg-sky-500/15 text-sm font-bold text-sky-300"
+                aria-hidden
+              >
+                RT
+              </span>
+              <span className="font-display text-sm font-semibold tracking-tight text-white">
+                Rental Tracker
+              </span>
+            </div>
+            <p className="text-sm leading-relaxed text-zinc-500">
+              Telegram alerts for new ikman.lk rentals. Independent tool — not
+              affiliated with ikman.lk.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-x-10 gap-y-6 text-sm">
+            <div className="space-y-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-600">
+                Product
+              </p>
+              <ul className="space-y-2 text-zinc-400">
+                <li>
+                  <a href="#how-it-works" className="transition-colors hover:text-white">
+                    How it works
+                  </a>
+                </li>
+                <li>
+                  <a href="#features" className="transition-colors hover:text-white">
+                    Features
+                  </a>
+                </li>
+                <li>
+                  <Link href="/sign-up" className="transition-colors hover:text-white">
+                    Get started
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            <div className="space-y-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-600">
+                Legal
+              </p>
+              <ul className="space-y-2 text-zinc-400">
+                <li>
+                  <Link href="/privacy" className="transition-colors hover:text-white">
+                    Privacy
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/terms" className="transition-colors hover:text-white">
+                    Terms
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-white/[0.04]">
+          <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-4 py-5 text-xs text-zinc-600 sm:flex-row sm:px-6">
+            <span>© {new Date().getFullYear()} Rental Tracker</span>
+            <span>Built for house-hunters in Sri Lanka</span>
+          </div>
+        </div>
       </footer>
     </div>
   )

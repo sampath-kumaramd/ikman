@@ -6,8 +6,9 @@
 -- ============================================================
 
 -- Per-user settings: search criteria + Telegram link + onboarding state
+-- user_id is the Clerk user id (e.g. user_xxx), not Supabase auth.users
 CREATE TABLE IF NOT EXISTS user_settings (
-  user_id               UUID        PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_id               TEXT        PRIMARY KEY,
   areas                 TEXT[]      NOT NULL DEFAULT '{}',
   listing_types         TEXT[]      NOT NULL DEFAULT '{apartment,annex,house}',
   max_price             INTEGER     NOT NULL DEFAULT 75000,
@@ -49,8 +50,8 @@ CREATE INDEX IF NOT EXISTS listings_created_at_idx ON listings (created_at DESC)
 
 -- Per-user viewed state for listings
 CREATE TABLE IF NOT EXISTS user_listing_states (
-  user_id    UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  listing_id UUID        NOT NULL REFERENCES listings(id)   ON DELETE CASCADE,
+  user_id    TEXT        NOT NULL,
+  listing_id UUID        NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
   viewed_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY (user_id, listing_id)
 );
@@ -58,8 +59,8 @@ CREATE TABLE IF NOT EXISTS user_listing_states (
 -- Notifications: one row per (user, new matching listing)
 CREATE TABLE IF NOT EXISTS notifications (
   id             UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id        UUID        REFERENCES auth.users(id) ON DELETE CASCADE,
-  listing_id     UUID        REFERENCES listings(id)   ON DELETE CASCADE,
+  user_id        TEXT,
+  listing_id     UUID        REFERENCES listings(id) ON DELETE CASCADE,
   whatsapp_sent  BOOLEAN     DEFAULT FALSE,  -- legacy name: true when the Telegram alert was sent
   read           BOOLEAN     DEFAULT FALSE,
   created_at     TIMESTAMPTZ DEFAULT NOW()
@@ -82,16 +83,14 @@ CREATE TABLE IF NOT EXISTS scrape_runs (
 
 CREATE INDEX IF NOT EXISTS scrape_runs_started_at_idx ON scrape_runs (started_at DESC);
 
--- Row Level Security: the app talks to the DB through API routes using the
--- service role key (which bypasses RLS); these policies lock down the anon key.
+-- Row Level Security: the app uses the service role key from API routes
+-- (bypasses RLS). With Clerk auth there is no Supabase auth.uid() — keep RLS
+-- enabled so the anon key cannot read/write app data directly.
 ALTER TABLE user_settings       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_listing_states ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE listings            ENABLE ROW LEVEL SECURITY;
 ALTER TABLE scrape_runs         ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY user_settings_own       ON user_settings       FOR ALL    USING (auth.uid() = user_id);
-CREATE POLICY user_listing_states_own ON user_listing_states FOR ALL    USING (auth.uid() = user_id);
-CREATE POLICY notifications_own       ON notifications       FOR ALL    USING (auth.uid() = user_id);
-CREATE POLICY listings_read           ON listings            FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY scrape_runs_read        ON scrape_runs         FOR SELECT USING (auth.role() = 'authenticated');
+-- No permissive policies for anon/authenticated roles → deny by default.
+-- Service role bypasses RLS for server-side access.

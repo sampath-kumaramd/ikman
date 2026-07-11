@@ -31,22 +31,28 @@ export class ScrapeProgress {
     }
   }
 
-  /** Log a progress step. Fires DB update eagerly; throttles Telegram edits. */
+  /** Log a progress step. Plain text for DB/dashboard; HTML only for Telegram. */
   async step(text: string): Promise<void> {
     this.steps.push(text)
     console.log(`  [progress] ${text}`)
     this._dbUpdate({ current_step: text, steps_log: this.steps })  // fire-and-forget
-    await this._tgEdit(this._progressText())
+    await this._tgEdit(this._progressTextHtml())
   }
 
   async done(newCount: number, totalCount: number): Promise<void> {
-    const line = newCount > 0
+    // Plain text for dashboard / scrape_runs.current_step
+    const plain = newCount > 0
+      ? `✅ ${newCount} new listing${newCount !== 1 ? 's' : ''} saved (${totalCount} scraped total)`
+      : `😴 No new listings this run (${totalCount} scraped)`
+
+    // HTML only for Telegram admin chat
+    const html = newCount > 0
       ? `✅ <b>${newCount} new listing${newCount !== 1 ? 's' : ''} saved</b> (${totalCount} scraped total)`
       : `😴 No new listings this run (${totalCount} scraped)`
 
     await this.db.from('scrape_runs').update({
       status:      'done',
-      current_step: line,
+      current_step: plain,
       new_count:   newCount,
       total_count: totalCount,
       finished_at: new Date().toISOString(),
@@ -55,31 +61,32 @@ export class ScrapeProgress {
 
     // Force-edit the final state regardless of throttle
     this.lastEdit = 0
-    await this._tgEdit(line)
+    await this._tgEdit(html)
   }
 
   async fail(err: string): Promise<void> {
+    const plain = `Failed: ${err}`
     await this.db.from('scrape_runs').update({
       status:      'failed',
-      current_step: `Failed: ${err}`,
+      current_step: plain,
       error:        err,
       finished_at:  new Date().toISOString(),
       steps_log:    this.steps,
     }).eq('id', this.runId)
 
     this.lastEdit = 0
-    await this._tgEdit(`❌ <b>Scrape failed</b>\n<code>${err}</code>`)
+    await this._tgEdit(`❌ <b>Scrape failed</b>\n<code>${escapeHtml(err)}</code>`)
   }
 
   // ── private ────────────────────────────────────────────────────────────────
 
-  private _progressText(): string {
+  private _progressTextHtml(): string {
     const recent = this.steps.slice(-6)
     return [
       '🔄 <b>Scrape in progress</b>',
       '',
       ...recent.map((s, i) =>
-        i === recent.length - 1 ? `⏳ ${s}` : `✓ ${s}`,
+        i === recent.length - 1 ? `⏳ ${escapeHtml(s)}` : `✓ ${escapeHtml(s)}`,
       ),
     ].join('\n')
   }
@@ -122,4 +129,11 @@ export class ScrapeProgress {
       })
     } catch { /* ignore — non-fatal */ }
   }
+}
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
 }

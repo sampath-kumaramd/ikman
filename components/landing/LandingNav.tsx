@@ -1,39 +1,74 @@
 'use client'
 
 import Link from 'next/link'
-import { motion } from 'motion/react'
+import { SignInButton, SignUpButton, Show, UserButton } from '@clerk/nextjs'
+
+const NAV_LINKS = [
+  { href: '#how-it-works', label: 'How it works' },
+  { href: '#features', label: 'Features' },
+  { href: '#coverage', label: 'Coverage' },
+] as const
 
 export function LandingNav() {
   return (
-    <motion.header
-      initial={{ opacity: 0, y: -16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: 'easeOut' }}
-      className="sticky top-0 z-50 border-b border-white/[0.08] bg-white/[0.03] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl backdrop-saturate-150"
-    >
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-        <Link href="/" className="flex items-center gap-2">
-          <span className="text-xl">🏠</span>
-          <span className="font-display text-lg font-bold tracking-tight text-white">
-            Rental Tracker
-          </span>
-        </Link>
+    <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#06080d]/80 backdrop-blur-xl">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
+        <div className="flex items-center gap-8">
+          <Link href="/" className="flex items-center gap-2.5">
+            <span
+              className="flex size-8 items-center justify-center rounded-lg bg-sky-500/15 text-sm font-bold text-sky-300"
+              aria-hidden
+            >
+              RT
+            </span>
+            <span className="font-display text-[15px] font-semibold tracking-tight text-white">
+              Rental Tracker
+            </span>
+          </Link>
+
+          <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">
+            {NAV_LINKS.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                className="rounded-lg px-3 py-2 text-sm text-zinc-400 transition-colors hover:bg-white/[0.04] hover:text-white"
+              >
+                {link.label}
+              </a>
+            ))}
+          </nav>
+        </div>
 
         <div className="flex items-center gap-2">
-          <Link
-            href="/login"
-            className="rounded-full px-4 py-2 text-sm font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-white"
-          >
-            Sign in
-          </Link>
-          <Link
-            href="/login"
-            className="rounded-full bg-sky-500/90 px-4 py-2 text-sm font-semibold text-white shadow-[0_8px_16px_-6px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.25)] transition-all hover:bg-sky-400"
-          >
-            Get started
-          </Link>
+          <Show when="signed-out">
+            <SignInButton mode="modal">
+              <button
+                type="button"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-300 transition-colors hover:bg-white/[0.04] hover:text-white"
+              >
+                Sign in
+              </button>
+            </SignInButton>
+            <SignUpButton mode="modal">
+              <button
+                type="button"
+                className="rounded-lg bg-white px-3.5 py-2 text-sm font-semibold text-zinc-900 transition-colors hover:bg-zinc-100"
+              >
+                Get started
+              </button>
+            </SignUpButton>
+          </Show>
+          <Show when="signed-in">
+            <Link
+              href="/dashboard"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-300 transition-colors hover:bg-white/[0.04] hover:text-white"
+            >
+              Dashboard
+            </Link>
+            <UserButton />
+          </Show>
         </div>
       </div>
-    </motion.header>
+    </header>
   )
 }

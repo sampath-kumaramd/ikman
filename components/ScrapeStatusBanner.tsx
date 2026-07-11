@@ -12,6 +12,12 @@ interface Props {
 const POLL_INTERVAL_RUNNING = 3000
 const POLL_INTERVAL_IDLE    = 15000
 
+/** Strip Telegram HTML tags from older scrape_runs rows stored with <b>…</b>. */
+function plainStep(text: string | null | undefined, fallback: string): string {
+  if (!text) return fallback
+  return text.replace(/<\/?[^>]+>/g, '').trim() || fallback
+}
+
 export function ScrapeStatusBanner({ onRunCompleted }: Props) {
   const [run,      setRun]      = useState<(ScrapeRun & { status: string }) | null>(null)
   const [expanded, setExpanded] = useState(false)
@@ -74,7 +80,7 @@ export function ScrapeStatusBanner({ onRunCompleted }: Props) {
 
         {/* Current step */}
         <span className={`${textColor} font-medium flex-1 truncate`}>
-          {run.current_step ?? (isRunning ? 'Running…' : run.status)}
+          {plainStep(run.current_step, isRunning ? 'Running…' : run.status)}
         </span>
 
         {/* Timestamp */}

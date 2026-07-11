@@ -8,9 +8,9 @@ const bricolage = Bricolage_Grotesque({
 })
 
 export const metadata: Metadata = {
-  title: 'ikman Rental Tracker — Never miss a boarding place again',
+  title: 'Rental Tracker — Telegram alerts for ikman.lk rentals',
   description:
-    'Instant Telegram alerts for new ikman.lk rental & boarding listings matching your area, budget and property type. Scraped regularly, around the clock.',
+    'Track ikman.lk apartments, annexes and houses by area and budget. Get Telegram alerts when new matching listings are posted.',
 }
 
 export default function HomePage() {

@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
+import { clerkClient } from '@clerk/nextjs/server'
 import { getAdminClient } from '@/lib/supabase'
-import { getAuthUser } from '@/lib/supabase-server'
+import { getAuthUser } from '@/lib/auth'
 
 /**
- * Delete the current user's account and all per-user data.
- * Auth user delete cascades user_settings / notifications / user_listing_states
- * (see FK ON DELETE CASCADE in schema).
+ * Delete the current user's app data + Clerk account.
+ * App tables are keyed by Clerk user id (TEXT); delete rows then Clerk user.
  */
 export async function DELETE() {
   try {
@@ -13,11 +13,15 @@ export async function DELETE() {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const admin = getAdminClient()
-    const { error } = await admin.auth.admin.deleteUser(user.id)
+    const userId = user.id
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
+    // Order: children of listings FKs first, then settings
+    await admin.from('user_listing_states').delete().eq('user_id', userId)
+    await admin.from('notifications').delete().eq('user_id', userId)
+    await admin.from('user_settings').delete().eq('user_id', userId)
+
+    const client = await clerkClient()
+    await client.users.deleteUser(userId)
 
     return NextResponse.json({ ok: true })
   } catch (err) {
