@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { isSupportedArea } from '@/lib/areas'
 import { getAdminClient } from '@/lib/supabase'
 import { getAuthUser } from '@/lib/supabase-server'
 import { DEFAULT_CRITERIA, LISTING_TYPES, getUserSettings, upsertUserSettings } from '@/lib/db'
@@ -38,7 +39,9 @@ export async function PUT(req: NextRequest) {
     const patch: Record<string, unknown> = {}
 
     if (Array.isArray(body.areas)) {
-      patch.areas = body.areas.filter((a): a is string => typeof a === 'string' && !!a.trim())
+      patch.areas = body.areas.filter(
+        (a): a is string => typeof a === 'string' && !!a.trim() && isSupportedArea(a),
+      )
     }
     if (Array.isArray(body.listing_types)) {
       patch.listing_types = body.listing_types.filter(

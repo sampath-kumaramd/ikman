@@ -4,6 +4,8 @@ Multi-user tracker for ikman.lk boarding & rental listings (apartments, annexes,
 
 **Stack:** Next.js 16 · Supabase (PostgreSQL + Auth) · Playwright · Telegram Bot · GitHub Actions · Vercel
 
+**Going live?** Use the [Production go-live checklist](PRODUCTION.md).
+
 ---
 
 ## Architecture
@@ -43,8 +45,14 @@ Vercel (Next.js)
 1. Message [@BotFather](https://t.me/BotFather) → `/newbot` → note the **bot token**
 2. Users never touch BotFather — they link their chat from inside the app
    via a `t.me/yourbot?start=<code>` deep link during onboarding.
-3. After deploying (step 4), register the webhook once:
-   `https://your-app.vercel.app/api/telegram-webhook/register`
+3. Generate two secrets (e.g. `openssl rand -hex 32` twice):
+   - `TELEGRAM_WEBHOOK_SECRET` — Telegram sends this on every update
+   - `ADMIN_SETUP_SECRET` — protects the one-time register endpoint
+4. After deploying (step 4), register the webhook once:
+   ```
+   https://your-app.vercel.app/api/telegram-webhook/register?secret=YOUR_ADMIN_SETUP_SECRET
+   ```
+   Or with a header: `Authorization: Bearer YOUR_ADMIN_SETUP_SECRET`
 
 ### 3. GitHub Actions Secrets
 
@@ -68,11 +76,16 @@ Go to: **GitHub repo → Settings → Secrets and variables → Actions**
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon/public key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key |
 | `TELEGRAM_BOT_TOKEN` | Bot token from Step 2 |
+| `TELEGRAM_WEBHOOK_SECRET` | Random secret for webhook verification |
+| `ADMIN_SETUP_SECRET` | Random secret for webhook registration |
 | `GITHUB_PAT` | GitHub Personal Access Token (scope: `workflow`) |
 | `GITHUB_OWNER` | Your GitHub username |
 | `GITHUB_REPO` | `ikman` (or your repo name) |
 
-3. Deploy, then visit `/api/telegram-webhook/register` once to point the bot at your app.
+3. Deploy, then register the webhook (requires `ADMIN_SETUP_SECRET`):
+   ```
+   https://your-app.vercel.app/api/telegram-webhook/register?secret=YOUR_ADMIN_SETUP_SECRET
+   ```
 
 ### 5. Local Development
 
@@ -92,13 +105,14 @@ npm run scrape     # Run scraper manually (loads .env via --env-file)
 
 ## User flow
 
-1. **Sign up / sign in** at `/login` (Supabase Auth, email + password)
+1. **Sign up / sign in** at `/login` (Supabase Auth, email + password). Forgot password is supported.
 2. **Onboarding (forced on first sign-in):**
-   - Step 1 — pick areas, property types, max rent, bedrooms (required)
-   - Step 2 — press **Connect Telegram**, hit **Start** in the chat that opens (required)
+   - Step 1 — pick supported areas, property types, max rent, bedrooms (required)
+   - Step 2 — press **Connect Telegram**, hit **Start** in the chat that opens (optional; can finish later)
 3. **Dashboard** — only listings matching *your* criteria, with per-user NEW/viewed state
-4. **Settings** — change criteria, toggle alerts, test message, unlink/relink Telegram
+4. **Settings** — change criteria, toggle alerts, test message, unlink/relink Telegram, delete account
 5. **Telegram commands** (linked chats only): `/scrape`, `/status`, `/help`
+6. **Public pages:** `/privacy`, `/terms`
 
 ---
 
@@ -123,7 +137,8 @@ app/
     telegram/connect/    POST deep link · GET status · DELETE unlink
     telegram/test/       POST test message to the user's chat
     telegram-webhook/    Telegram updates: /start linking + commands
-    trigger-scrape/      POST → triggers GitHub Actions
+    trigger-scrape/      POST → triggers GitHub Actions (5 min cooldown)
+    account/             DELETE → delete the signed-in user
 
 components/
   AuthForm.tsx           Sign in / sign up form

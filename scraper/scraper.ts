@@ -1,17 +1,6 @@
 import { type Browser } from 'playwright'
+import { areaToSlug } from '../lib/areas'
 import type { Listing } from '../lib/types'
-
-const AREA_SLUGS: Record<string, string> = {
-  'Moratuwa':      'moratuwa',
-  'Ratmalana':     'ratmalana',
-  'Mount Lavinia': 'mount-lavinia',
-  'Dehiwala':      'dehiwala',
-  'Colombo':       'colombo',
-  'Panadura':      'panadura',
-  'Piliyandala':   'piliyandala',
-  'Maharagama':    'maharagama',
-  'Nugegoda':      'nugegoda',
-}
 
 const TYPE_SLUGS: Record<string, string> = {
   apartment: 'apartment-rentals',
@@ -520,7 +509,11 @@ export async function runScraper(config: ScrapeConfig, browser: Browser): Promis
   const allListings: Partial<Listing>[] = []
 
   for (const area of config.areas) {
-    const areaSlug = AREA_SLUGS[area] ?? area.toLowerCase().replace(/\s+/g, '-')
+    const areaSlug = areaToSlug(area)
+    if (!areaSlug) {
+      console.warn(`  Skipping unsupported area: ${area}`)
+      continue
+    }
 
     for (const type of config.listing_types) {
       const categorySlug = TYPE_SLUGS[type] ?? 'apartment-rentals'

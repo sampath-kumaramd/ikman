@@ -100,8 +100,14 @@ export default function LoginPage() {
         </div>
       </main>
 
-      <footer className="relative z-10 pb-6 text-center text-xs text-zinc-600">
-        Free forever · no credit card · built for house-hunters in Sri Lanka 🇱🇰
+      <footer className="relative z-10 space-y-2 pb-6 text-center text-xs text-zinc-600">
+        <p>Free forever · no credit card · built for house-hunters in Sri Lanka 🇱🇰</p>
+        <p className="text-zinc-700">
+          Not affiliated with ikman.lk ·{' '}
+          <Link href="/privacy" className="hover:text-zinc-500">Privacy</Link>
+          {' · '}
+          <Link href="/terms" className="hover:text-zinc-500">Terms</Link>
+        </p>
       </footer>
     </div>
   )

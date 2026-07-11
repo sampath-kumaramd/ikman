@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminClient } from '@/lib/supabase'
 import { findUserByChatId, findUserByConnectCode, linkTelegramChat } from '@/lib/db'
+import { triggerScrape } from '@/lib/trigger-scrape'
 import { sendTelegram } from '../../../scraper/telegram'
 
 const COMMANDS: Record<string, string> = {
@@ -9,36 +10,21 @@ const COMMANDS: Record<string, string> = {
   '/help':   'Show available commands',
 }
 
-async function triggerGithubScrape(): Promise<{ ok: boolean; error?: string }> {
-  const token = process.env.GITHUB_PAT
-  const owner = process.env.GITHUB_OWNER
-  const repo  = process.env.GITHUB_REPO
-
-  if (!token || !owner || !repo) {
-    return { ok: false, error: 'GITHUB_PAT / GITHUB_OWNER / GITHUB_REPO not set' }
+export async function POST(req: NextRequest) {
+  const webhookSecret = process.env.TELEGRAM_WEBHOOK_SECRET
+  if (!webhookSecret) {
+    return NextResponse.json({ error: 'Webhook not configured' }, { status: 503 })
   }
 
-  const res = await fetch(
-    `https://api.github.com/repos/${owner}/${repo}/actions/workflows/scrape.yml/dispatches`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/vnd.github+json',
-        'X-GitHub-Api-Version': '2022-11-28',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ ref: process.env.GITHUB_BRANCH ?? 'master' }),
-    },
-  )
+  const headerSecret = req.headers.get('x-telegram-bot-api-secret-token')
+  if (headerSecret !== webhookSecret) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
-  return res.ok ? { ok: true } : { ok: false, error: `GitHub ${res.status}` }
-}
-
-export async function POST(req: NextRequest) {
   const token = process.env.TELEGRAM_BOT_TOKEN
 
-  // Always return 200 to Telegram (otherwise it retries endlessly)
+  // Always return 200 to Telegram for valid authenticated updates
+  // (otherwise it retries endlessly on application errors)
   if (!token) return NextResponse.json({ ok: true })
 
   let body: Record<string, unknown>
@@ -96,12 +82,11 @@ export async function POST(req: NextRequest) {
   }
 
   if (command === '/scrape' || command === '/run') {
-    await reply('⏳ Starting scrape… results arrive in ~2 minutes.')
-    const result = await triggerGithubScrape()
+    const result = await triggerScrape(db)
     if (result.ok) {
-      await reply('✅ Scrape triggered via GitHub Actions.')
+      await reply('✅ Scrape triggered via GitHub Actions. Results arrive in ~2 minutes.')
     } else {
-      await reply(`❌ Failed to trigger scrape: ${result.error}`)
+      await reply(`❌ ${result.error}`)
     }
 
   } else if (command === '/status') {

@@ -2,10 +2,12 @@
 
 import { MapPin } from 'lucide-react'
 import { Marquee } from '@/components/ui/marquee'
+import { AVAILABLE_AREAS } from '@/lib/areas'
 import { Reveal } from './Reveal'
 
-const ROW_ONE = ['Moratuwa', 'Ratmalana', 'Mount Lavinia', 'Dehiwala', 'Panadura', 'Piliyandala']
-const ROW_TWO = ['Maharagama', 'Nugegoda', 'Colombo 06', 'Boralesgamuwa', 'Kohuwala', 'Katubedda']
+const MID = Math.ceil(AVAILABLE_AREAS.length / 2)
+const ROW_ONE = AVAILABLE_AREAS.slice(0, MID)
+const ROW_TWO = AVAILABLE_AREAS.slice(MID)
 
 function AreaPill({ name }: { name: string }) {
   return (

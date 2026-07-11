@@ -9,9 +9,9 @@ import {
 import { getBrowserSupabase } from '@/lib/supabase-browser'
 import { cn } from '@/lib/utils'
 
-type Mode = 'signin' | 'signup'
+type Mode = 'signin' | 'signup' | 'reset'
 
-const MODES: { value: Mode; label: string }[] = [
+const MODES: { value: 'signin' | 'signup'; label: string }[] = [
   { value: 'signin', label: 'Sign in' },
   { value: 'signup', label: 'Create account' },
 ]
@@ -30,6 +30,12 @@ function friendlyError(message: string): string {
   if (/at least 6 characters/i.test(message)) {
     return 'Password needs to be at least 6 characters.'
   }
+  if (/rate limit|too many requests|security purposes/i.test(message)) {
+    return 'Too many attempts. Wait a minute and try again.'
+  }
+  if (/for security purposes/i.test(message)) {
+    return 'Please wait a moment before requesting another email.'
+  }
   return message
 }
 
@@ -42,10 +48,12 @@ export function AuthForm() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [confirmSent, setConfirmSent] = useState(false)
+  const [resetSent, setResetSent] = useState(false)
 
   function switchMode(next: Mode) {
     setMode(next)
     setError(null)
+    setResetSent(false)
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -56,7 +64,13 @@ export function AuthForm() {
     const supabase = getBrowserSupabase()
 
     try {
-      if (mode === 'signin') {
+      if (mode === 'reset') {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+        })
+        if (error) throw error
+        setResetSent(true)
+      } else if (mode === 'signin') {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
         router.push('/dashboard')
@@ -72,6 +86,12 @@ export function AuthForm() {
           // Email confirmation disabled on the project — signed in straight away
           router.push('/dashboard')
           router.refresh()
+        } else if (data.user && data.user.identities?.length === 0) {
+          // Supabase's email-enumeration protection: when the email is already
+          // registered it returns a fake-success user with no identities and
+          // sends no email. Tell the user instead of showing "check your email".
+          setMode('signin')
+          setError('An account with this email already exists — try signing in instead.')
         } else {
           setConfirmSent(true)
         }
@@ -112,6 +132,35 @@ export function AuthForm() {
     )
   }
 
+  if (resetSent) {
+    return (
+      <div className="glass relative overflow-hidden rounded-3xl p-8 text-center">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0.06),transparent_45%)]"
+        />
+        <div className="relative space-y-4">
+          <span className="glass-subtle mx-auto flex size-14 items-center justify-center rounded-2xl text-sky-400">
+            <MailCheck size={26} />
+          </span>
+          <h2 className="font-display text-xl font-bold text-white">Check your email</h2>
+          <p className="text-sm leading-relaxed text-zinc-400">
+            If an account exists for{' '}
+            <b className="text-zinc-200">{email}</b>, we sent a password reset
+            link. Open it to choose a new password.
+          </p>
+          <button
+            type="button"
+            onClick={() => { setResetSent(false); switchMode('signin') }}
+            className="text-sm font-medium text-sky-300 transition-colors hover:text-sky-200"
+          >
+            ← Back to sign in
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="glass relative overflow-hidden rounded-3xl p-6 sm:p-8">
       {/* specular sheen across the glass */}
@@ -122,37 +171,40 @@ export function AuthForm() {
 
       <div className="relative">
         <h2 className="font-display text-2xl font-bold tracking-tight text-white">
-          {mode === 'signin' ? 'Welcome back' : 'Create your account'}
+          {mode === 'signin' && 'Welcome back'}
+          {mode === 'signup' && 'Create your account'}
+          {mode === 'reset' && 'Reset password'}
         </h2>
         <p className="mt-1 text-sm text-zinc-400">
-          {mode === 'signin'
-            ? 'Your alerts are waiting for you.'
-            : 'Two minutes from now, you’re tracking.'}
+          {mode === 'signin' && 'Your alerts are waiting for you.'}
+          {mode === 'signup' && 'Two minutes from now, you’re tracking.'}
+          {mode === 'reset' && 'We’ll email you a link to set a new password.'}
         </p>
 
-        {/* segmented mode switch with sliding glass thumb */}
-        <div className="glass-subtle mt-6 grid grid-cols-2 rounded-full p-1">
-          {MODES.map((m) => (
-            <button
-              key={m.value}
-              type="button"
-              onClick={() => switchMode(m.value)}
-              className={cn(
-                'relative rounded-full py-2 text-sm font-medium transition-colors',
-                mode === m.value ? 'text-white' : 'text-zinc-400 hover:text-zinc-200',
-              )}
-            >
-              {mode === m.value && (
-                <motion.span
-                  layoutId="auth-mode-thumb"
-                  transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
-                  className="absolute inset-0 rounded-full bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]"
-                />
-              )}
-              <span className="relative">{m.label}</span>
-            </button>
-          ))}
-        </div>
+        {mode !== 'reset' && (
+          <div className="glass-subtle mt-6 grid grid-cols-2 rounded-full p-1">
+            {MODES.map((m) => (
+              <button
+                key={m.value}
+                type="button"
+                onClick={() => switchMode(m.value)}
+                className={cn(
+                  'relative rounded-full py-2 text-sm font-medium transition-colors',
+                  mode === m.value ? 'text-white' : 'text-zinc-400 hover:text-zinc-200',
+                )}
+              >
+                {mode === m.value && (
+                  <motion.span
+                    layoutId="auth-mode-thumb"
+                    transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
+                    className="absolute inset-0 rounded-full bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]"
+                  />
+                )}
+                <span className="relative">{m.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div className="space-y-1.5">
@@ -177,37 +229,50 @@ export function AuthForm() {
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-zinc-300" htmlFor="password">
-              Password
-            </label>
-            <div className="relative">
-              <Lock
-                size={15}
-                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500"
-              />
-              <input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                required
-                minLength={6}
-                autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder={mode === 'signup' ? 'At least 6 characters' : '••••••••'}
-                className="w-full rounded-xl border border-white/10 border-t-white/20 bg-white/[0.04] py-2.5 pl-10 pr-11 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-sky-400/40 focus:bg-white/[0.06] focus:ring-2 focus:ring-sky-400/20"
-              />
-              <button
-                type="button"
-                tabIndex={-1}
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-                onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 transition-colors hover:text-zinc-300"
-              >
-                {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-              </button>
+          {mode !== 'reset' && (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-zinc-300" htmlFor="password">
+                  Password
+                </label>
+                {mode === 'signin' && (
+                  <button
+                    type="button"
+                    onClick={() => switchMode('reset')}
+                    className="text-xs font-medium text-sky-300 transition-colors hover:text-sky-200"
+                  >
+                    Forgot password?
+                  </button>
+                )}
+              </div>
+              <div className="relative">
+                <Lock
+                  size={15}
+                  className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500"
+                />
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  minLength={6}
+                  autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={mode === 'signup' ? 'At least 6 characters' : '••••••••'}
+                  className="w-full rounded-xl border border-white/10 border-t-white/20 bg-white/[0.04] py-2.5 pl-10 pr-11 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-sky-400/40 focus:bg-white/[0.06] focus:ring-2 focus:ring-sky-400/20"
+                />
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 transition-colors hover:text-zinc-300"
+                >
+                  {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           {error && (
             <p
@@ -227,7 +292,9 @@ export function AuthForm() {
               <Loader2 size={15} className="animate-spin" />
             ) : (
               <>
-                {mode === 'signin' ? 'Sign in' : 'Create free account'}
+                {mode === 'signin' && 'Sign in'}
+                {mode === 'signup' && 'Create free account'}
+                {mode === 'reset' && 'Send reset link'}
                 <ArrowRight size={15} />
               </>
             )}
@@ -235,7 +302,7 @@ export function AuthForm() {
         </form>
 
         <p className="mt-5 text-center text-xs text-zinc-500">
-          {mode === 'signin' ? (
+          {mode === 'signin' && (
             <>
               New here?{' '}
               <button
@@ -246,7 +313,8 @@ export function AuthForm() {
                 Create a free account
               </button>
             </>
-          ) : (
+          )}
+          {mode === 'signup' && (
             <>
               Already tracking?{' '}
               <button
@@ -255,6 +323,18 @@ export function AuthForm() {
                 className="font-medium text-sky-300 transition-colors hover:text-sky-200"
               >
                 Sign in
+              </button>
+            </>
+          )}
+          {mode === 'reset' && (
+            <>
+              Remembered it?{' '}
+              <button
+                type="button"
+                onClick={() => switchMode('signin')}
+                className="font-medium text-sky-300 transition-colors hover:text-sky-200"
+              >
+                Back to sign in
               </button>
             </>
           )}

@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { LandingNav } from './LandingNav'
 import { Hero } from './Hero'
@@ -41,6 +42,21 @@ export function LandingPage({ fontVariable }: LandingPageProps) {
         <AreasMarquee />
         <FinalCTA />
       </main>
+
+      <footer className="relative z-10 border-t border-white/5 px-4 py-10 text-center text-xs text-zinc-600">
+        <p className="text-zinc-500">
+          Independent house-hunting tool · not affiliated with ikman.lk
+        </p>
+        <p className="mt-2">
+          <Link href="/privacy" className="hover:text-zinc-400">
+            Privacy
+          </Link>
+          <span className="mx-2 text-zinc-700">·</span>
+          <Link href="/terms" className="hover:text-zinc-400">
+            Terms
+          </Link>
+        </p>
+      </footer>
     </div>
   )
 }

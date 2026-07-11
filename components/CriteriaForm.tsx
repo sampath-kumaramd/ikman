@@ -1,9 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { X, Plus } from 'lucide-react'
+import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Slider } from '@/components/ui/slider'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -14,13 +12,13 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
+import { AVAILABLE_AREAS, isSupportedArea } from '@/lib/areas'
 import { cn } from '@/lib/utils'
 import type { ListingType, SearchCriteria } from '@/lib/types'
 
-export const AVAILABLE_AREAS = [
-  'Moratuwa', 'Ratmalana', 'Mount Lavinia', 'Dehiwala',
-  'Panadura', 'Piliyandala', 'Maharagama', 'Nugegoda', 'Colombo 06',
-]
+// Re-export so existing imports of AVAILABLE_AREAS from this module still work
+export { AVAILABLE_AREAS }
+
 const LISTING_TYPE_OPTIONS: ListingType[] = ['apartment', 'annex', 'house']
 
 /** Card-like section that stays a plain card in light mode (settings page)
@@ -65,7 +63,7 @@ interface CriteriaFormProps {
 
 /** Controlled editor for search criteria — shared by onboarding and settings. */
 export function CriteriaForm({ value, onChange }: CriteriaFormProps) {
-  const [customArea, setCustomArea] = useState('')
+  const legacyAreas = value.areas.filter((a) => !isSupportedArea(a))
 
   function toggleArea(area: string) {
     onChange({
@@ -85,20 +83,12 @@ export function CriteriaForm({ value, onChange }: CriteriaFormProps) {
     })
   }
 
-  function addCustomArea() {
-    const trimmed = customArea.trim()
-    if (trimmed && !value.areas.includes(trimmed)) {
-      onChange({ ...value, areas: [...value.areas, trimmed] })
-    }
-    setCustomArea('')
-  }
-
   return (
     <div className="space-y-6">
       {/* Areas */}
       <Section
         title="Search Areas"
-        description="Select the areas you want to track for rental listings."
+        description="Select areas we actively scrape on ikman.lk."
       >
         <div className="space-y-4">
           <div className="flex flex-wrap gap-2">
@@ -119,45 +109,34 @@ export function CriteriaForm({ value, onChange }: CriteriaFormProps) {
             })}
           </div>
 
-          {/* Custom areas */}
-          {value.areas.filter((a) => !AVAILABLE_AREAS.includes(a)).length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {value.areas.filter((a) => !AVAILABLE_AREAS.includes(a)).map((area) => (
-                <Badge
-                  key={area}
-                  variant="secondary"
-                  className="gap-1 pr-1 dark:bg-white/[0.08] dark:text-zinc-200"
-                >
-                  {area}
-                  <button
-                    type="button"
-                    onClick={() => toggleArea(area)}
-                    className="ml-0.5 rounded-full p-0.5 hover:bg-muted-foreground/20"
+          {/* Legacy unsupported areas — can remove, cannot add */}
+          {legacyAreas.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs text-amber-400/90">
+                These areas are no longer supported and won&apos;t be scraped. Remove them
+                or switch to a supported area.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {legacyAreas.map((area) => (
+                  <Badge
+                    key={area}
+                    variant="secondary"
+                    className="gap-1 pr-1 dark:bg-amber-500/15 dark:text-amber-200"
                   >
-                    <X size={10} />
-                  </button>
-                </Badge>
-              ))}
+                    {area}
+                    <button
+                      type="button"
+                      onClick={() => toggleArea(area)}
+                      className="ml-0.5 rounded-full p-0.5 hover:bg-muted-foreground/20"
+                      aria-label={`Remove ${area}`}
+                    >
+                      <X size={10} />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
             </div>
           )}
-
-          <div className="flex gap-2">
-            <Input
-              placeholder="Add custom area…"
-              value={customArea}
-              onChange={(e) => setCustomArea(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomArea())}
-              className="flex-1 dark:border-white/10 dark:bg-white/[0.04] dark:placeholder:text-zinc-600"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              className={chipClasses(false)}
-              onClick={addCustomArea}
-            >
-              <Plus size={15} /> Add
-            </Button>
-          </div>
         </div>
       </Section>
 

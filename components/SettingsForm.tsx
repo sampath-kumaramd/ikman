@@ -1,13 +1,15 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Save, Loader2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Save, Loader2, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { CriteriaForm } from '@/components/CriteriaForm'
 import { TelegramConnect } from '@/components/TelegramConnect'
+import { getBrowserSupabase } from '@/lib/supabase-browser'
 import type { SearchCriteria, SettingsResponse } from '@/lib/types'
 
 const DEFAULT_CRITERIA: SearchCriteria = {
@@ -31,11 +33,14 @@ function normalizeCriteria(data: unknown): SearchCriteria {
 }
 
 export function SettingsForm() {
+  const router = useRouter()
   const [criteria, setCriteria] = useState<SearchCriteria>(DEFAULT_CRITERIA)
   const [notificationsEnabled, setNotificationsEnabled] = useState(true)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/settings')
@@ -116,6 +121,51 @@ export function SettingsForm() {
         {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
         {saved ? 'Saved!' : 'Save settings'}
       </Button>
+
+      {/* Danger zone — outside primary save flow */}
+      <Card className="border-red-500/20 dark:rounded-2xl dark:border-red-500/20 dark:border-t-red-400/20 dark:bg-red-500/[0.04] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] dark:backdrop-blur-xl">
+        <CardHeader>
+          <CardTitle className="text-red-300 dark:font-display">Danger zone</CardTitle>
+          <CardDescription className="dark:text-zinc-400">
+            Permanently delete your account, search criteria, notifications, and Telegram link.
+            This cannot be undone.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {deleteError && (
+            <p role="alert" className="text-sm text-red-300">{deleteError}</p>
+          )}
+          <Button
+            type="button"
+            variant="outline"
+            disabled={deleting}
+            className="border-red-500/40 text-red-300 hover:bg-red-500/10 hover:text-red-200"
+            onClick={async () => {
+              const ok = window.confirm(
+                'Delete your account permanently? You will need to sign up again to use the tracker.',
+              )
+              if (!ok) return
+              setDeleting(true)
+              setDeleteError(null)
+              try {
+                const res = await fetch('/api/account', { method: 'DELETE' })
+                const data = await res.json().catch(() => ({}))
+                if (!res.ok) throw new Error(data.error ?? 'Could not delete account')
+                await getBrowserSupabase().auth.signOut()
+                router.push('/')
+                router.refresh()
+              } catch (err) {
+                setDeleteError((err as Error).message)
+              } finally {
+                setDeleting(false)
+              }
+            }}
+          >
+            {deleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+            Delete account
+          </Button>
+        </CardContent>
+      </Card>
     </form>
   )
 }

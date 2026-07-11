@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+  <rect width="1200" height="630" fill="#07090f"/>
+  <circle cx="200" cy="80" r="280" fill="#0EA5E9" fill-opacity="0.12"/>
+  <circle cx="1000" cy="520" r="300" fill="#6366F1" fill-opacity="0.12"/>
+  <text x="80" y="280" fill="#FFFFFF" font-family="system-ui, sans-serif" font-size="72" font-weight="700">Rental Tracker</text>
+  <text x="80" y="360" fill="#94A3B8" font-family="system-ui, sans-serif" font-size="36">Never miss a boarding place on ikman.lk</text>
+  <text x="80" y="480" fill="#38BDF8" font-family="system-ui, sans-serif" font-size="28">Telegram alerts · every 5 minutes</text>
+</svg>
