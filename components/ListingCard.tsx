@@ -6,6 +6,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button, buttonVariants } from '@/components/ui/button'
+import { track } from '@/lib/analytics'
 import { cn } from '@/lib/utils'
 import type { Listing } from '@/lib/types'
 
@@ -171,7 +172,15 @@ export function ListingCard({ listing, onToggleViewed }: ListingCardProps) {
             href={listing.url}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={markViewed}
+            onClick={() => {
+              track('listing_opened', {
+                listing_id: listing.id,
+                area: listing.area,
+                listing_type: listing.listing_type,
+                price: listing.price,
+              })
+              void markViewed()
+            }}
             className={cn(buttonVariants({ variant: 'secondary', size: 'sm' }), 'ml-auto bg-white/[0.06] text-zinc-200 hover:bg-white/[0.12]')}
           >
             View on ikman <ExternalLink size={12} />

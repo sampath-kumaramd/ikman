@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator'
 import { useClerk } from '@clerk/nextjs'
 import { CriteriaForm } from '@/components/CriteriaForm'
 import { TelegramConnect } from '@/components/TelegramConnect'
+import { track } from '@/lib/analytics'
 import type { SearchCriteria, SettingsResponse } from '@/lib/types'
 
 const DEFAULT_CRITERIA: SearchCriteria = {
@@ -66,6 +67,10 @@ export function SettingsForm() {
         body: JSON.stringify({ ...criteria, notifications_enabled: notificationsEnabled }),
       })
       if (res.ok) {
+        track('settings_saved', {
+          areas: criteria.areas.length,
+          notifications_enabled: notificationsEnabled,
+        })
         setSaved(true)
         setTimeout(() => setSaved(false), 3000)
       }
@@ -150,6 +155,7 @@ export function SettingsForm() {
                     const res = await fetch('/api/account', { method: 'DELETE' })
                     const data = await res.json().catch(() => ({}))
                     if (!res.ok) throw new Error(data.error ?? 'Could not delete account')
+                    track('account_deleted')
                     await signOut({ redirectUrl: '/' })
                     router.push('/')
                     router.refresh()

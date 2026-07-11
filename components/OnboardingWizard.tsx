@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { ArrowLeft, ArrowRight, Check, Loader2, Send } from 'lucide-react'
 import { CriteriaForm } from '@/components/CriteriaForm'
 import { TelegramConnect } from '@/components/TelegramConnect'
+import { track } from '@/lib/analytics'
 import { cn } from '@/lib/utils'
 import type { SearchCriteria } from '@/lib/types'
 
@@ -63,6 +64,11 @@ export function OnboardingWizard({ telegramConnected }: { telegramConnected: boo
         const data = await res.json().catch(() => ({}))
         throw new Error(data.error ?? 'Could not save your search criteria')
       }
+      track('onboarding_criteria_saved', {
+        areas: criteria.areas.length,
+        listing_types: criteria.listing_types.length,
+        max_price: criteria.max_price,
+      })
       setStep(2)
     } catch (err) {
       setError((err as Error).message)
@@ -78,6 +84,7 @@ export function OnboardingWizard({ telegramConnected }: { telegramConnected: boo
       const res = await fetch('/api/onboarding', { method: 'POST' })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error ?? 'Could not complete setup')
+      track('onboarding_completed', { telegram_connected: connected })
       router.push('/dashboard')
       router.refresh()
     } catch (err) {

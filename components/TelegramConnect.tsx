@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { CheckCircle2, AlertCircle, Loader2, Send, Unlink, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { track } from '@/lib/analytics'
 
 interface TelegramConnectProps {
   /** Show test-message + unlink controls (settings page). */
@@ -49,7 +50,11 @@ export function TelegramConnect({ manage = false, onStatusChange }: TelegramConn
     }
     pollRef.current = setInterval(async () => {
       const ok = await checkStatus()
-      if (ok && pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
+      if (ok && pollRef.current) {
+        clearInterval(pollRef.current)
+        pollRef.current = null
+        track('telegram_connected')
+      }
     }, 3000)
     return () => { if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null } }
   }, [link, connected, checkStatus])
@@ -62,6 +67,7 @@ export function TelegramConnect({ manage = false, onStatusChange }: TelegramConn
       const data = await res.json()
       if (!res.ok || !data.link) throw new Error(data.error ?? 'Could not create connect link')
       setLink(data.link)
+      track('telegram_connect_started')
       window.open(data.link, '_blank', 'noopener')
     } catch (err) {
       setError((err as Error).message)
@@ -77,6 +83,7 @@ export function TelegramConnect({ manage = false, onStatusChange }: TelegramConn
       setLink(null)
       setConnected(false)
       onStatusChange?.(false)
+      track('telegram_unlinked')
     } finally {
       setBusy(false)
     }
@@ -88,6 +95,7 @@ export function TelegramConnect({ manage = false, onStatusChange }: TelegramConn
     try {
       const res = await fetch('/api/telegram/test', { method: 'POST' })
       const data = await res.json()
+      if (data.ok) track('telegram_test_sent')
       setTestResult({ ok: data.ok, message: data.message ?? data.error ?? 'Unknown error' })
     } catch {
       setTestResult({ ok: false, message: 'Request failed — is the server running?' })

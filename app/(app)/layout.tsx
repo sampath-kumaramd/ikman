@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Settings } from 'lucide-react'
+import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { NotificationBell } from '@/components/NotificationBell'
 import { UserMenu } from '@/components/UserMenu'
 import { getAuthUser } from '@/lib/auth'
@@ -35,6 +36,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </Link>
 
           <div className="flex items-center gap-1">
+            <FeedbackDialog />
             <NotificationBell />
             <Link
               href="/settings"

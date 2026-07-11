@@ -6,6 +6,7 @@ import { ListingCard } from '@/components/ListingCard'
 import { FilterBar } from '@/components/FilterBar'
 import { ScrapeStatusBanner } from '@/components/ScrapeStatusBanner'
 import { Button } from '@/components/ui/button'
+import { track } from '@/lib/analytics'
 import type { Listing, ListingFilters } from '@/lib/types'
 
 const DEFAULT_FILTERS: ListingFilters = {
@@ -65,6 +66,7 @@ export default function DashboardPage() {
     try {
       const res = await fetch('/api/trigger-scrape', { method: 'POST' })
       const data = await res.json()
+      if (res.ok) track('scrape_triggered', { source: 'dashboard' })
       setTriggerMsg(res.ok ? '✓ Scrape triggered! Results appear in ~2 minutes.' : `Error: ${data.error}`)
     } catch {
       setTriggerMsg('Failed to trigger scrape.')

@@ -1,7 +1,10 @@
 import { ClerkProvider } from '@clerk/nextjs'
 import { shadcn } from '@clerk/ui/themes'
+import { Analytics } from '@vercel/analytics/next'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import type { Metadata } from 'next'
 import { Geist, Bricolage_Grotesque } from 'next/font/google'
+import { AnalyticsProvider } from '@/components/AnalyticsProvider'
 import './globals.css'
 
 const geist = Geist({ subsets: ['latin'] })
@@ -61,8 +64,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           signUpUrl="/sign-up"
           afterSignOutUrl="/"
         >
-          {children}
+          <AnalyticsProvider>{children}</AnalyticsProvider>
         </ClerkProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )

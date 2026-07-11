@@ -83,6 +83,20 @@ CREATE TABLE IF NOT EXISTS scrape_runs (
 
 CREATE INDEX IF NOT EXISTS scrape_runs_started_at_idx ON scrape_runs (started_at DESC);
 
+-- User feedback / feature requests
+CREATE TABLE IF NOT EXISTS feedback (
+  id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id     TEXT        NOT NULL,
+  email       TEXT,
+  category    TEXT        NOT NULL DEFAULT 'feature',
+  message     TEXT        NOT NULL,
+  page        TEXT,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS feedback_created_at_idx ON feedback (created_at DESC);
+CREATE INDEX IF NOT EXISTS feedback_user_id_idx ON feedback (user_id);
+
 -- Row Level Security: the app uses the service role key from API routes
 -- (bypasses RLS). With Clerk auth there is no Supabase auth.uid() — keep RLS
 -- enabled so the anon key cannot read/write app data directly.
@@ -91,6 +105,7 @@ ALTER TABLE user_listing_states ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE listings            ENABLE ROW LEVEL SECURITY;
 ALTER TABLE scrape_runs         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE feedback            ENABLE ROW LEVEL SECURITY;
 
 -- No permissive policies for anon/authenticated roles → deny by default.
 -- Service role bypasses RLS for server-side access.
