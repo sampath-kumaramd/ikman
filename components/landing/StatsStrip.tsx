@@ -4,8 +4,8 @@ import { NumberTicker } from '@/components/ui/number-ticker'
 import { Reveal } from './Reveal'
 
 const STATS = [
-  { value: 5,  suffix: ' min', label: 'between scrapes' },
-  { value: 9,  suffix: '+',    label: 'areas covered' },
+  { value: 15, suffix: ' min', label: 'between scrapes' },
+  { value: 330, suffix: '+',   label: 'ikman locations' },
   { value: 60, suffix: ' sec', label: 'from match to alert', prefix: '<' },
   { value: null, display: '24/7', label: 'monitoring, no naps' },
 ] as const

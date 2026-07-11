@@ -17,7 +17,7 @@ function GlassSheen({ className = '' }: { className?: string }) {
 const FEATURES = [
   {
     Icon: Timer,
-    name: 'Scraped every 5 minutes',
+    name: 'Scraped every 15 minutes',
     description:
       'A scraper sweeps ikman.lk around the clock, so fresh listings reach you while they’re still fresh.',
     className: 'lg:col-span-2',
@@ -75,7 +75,7 @@ export function FeaturesBento() {
       <Reveal delay={0.15}>
         <BentoGrid className="mt-14 auto-rows-[15rem] lg:grid-cols-3">
           {FEATURES.map((feature) => (
-            <BentoCard key={feature.name} {...feature} href="/login" cta="Get started" />
+            <BentoCard key={feature.name} {...feature} href="/sign-up" cta="Get started" />
           ))}
         </BentoGrid>
       </Reveal>

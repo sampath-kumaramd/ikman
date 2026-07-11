@@ -101,20 +101,22 @@ openssl rand -hex 32   # → ADMIN_SETUP_SECRET
 
 ---
 
-## 2. Supabase
+## 2. Supabase (database only) + Clerk (auth)
 
-- [ ] Schema applied: run [`supabase/schema.sql`](supabase/schema.sql) (or migration if upgrading)
-- [ ] **Authentication → Providers → Email** enabled
-- [ ] Confirm-email policy decided:
-  - Production: usually **on** (users confirm before use)
-  - Soft test: off is OK; turn on before wide launch
-- [ ] **Authentication → URL configuration**
-  - Site URL = `https://your-domain.com`
-  - Redirect URLs include:
-    - `https://your-domain.com/auth/callback`
-    - `http://localhost:3000/auth/callback` (dev)
+### Supabase
+
+- [ ] Schema applied: run [`supabase/schema.sql`](supabase/schema.sql) (TEXT `user_id` for Clerk)
+- [ ] **If upgrading from Supabase Auth:** run [`supabase/migration-clerk-user-ids.sql`](supabase/migration-clerk-user-ids.sql) (required — UUID columns reject `user_xxx` ids)
 - [ ] Service role key only in server envs (Vercel / Actions), not in client code
 - [ ] (Optional) Enable point-in-time recovery / backups on paid plan
+
+### Clerk
+
+- [ ] App created / linked (`clerk init`)
+- [ ] `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` + `CLERK_SECRET_KEY` on Vercel Production
+- [ ] Sign-in / sign-up URLs: `/sign-in`, `/sign-up`
+- [ ] Allowed origins / redirect URLs include production domain
+- [ ] (Later) Create a **production** Clerk instance (doctor may show only development)
 
 ---
 
@@ -155,7 +157,7 @@ curl -sS -o /dev/null -w "%{http_code}\n" -X POST "https://YOUR-DOMAIN.com/api/t
 - [ ] Workflow file present: [`.github/workflows/scrape.yml`](.github/workflows/scrape.yml)
 - [ ] Manual run: Actions → **Scrape ikman.lk** → Run workflow → green
 - [ ] Logs show users scraped / listings processed (or clean skip if no onboarded users)
-- [ ] Cron every 5 minutes is acceptable for your Actions minutes budget
+- [ ] Cron interval fits Actions minutes budget (see [docs/SCRAPER-HOSTING.md](docs/SCRAPER-HOSTING.md))
 - [ ] `GITHUB_PAT` can dispatch workflows on this repo
 - [ ] `GITHUB_BRANCH` matches the default branch name
 

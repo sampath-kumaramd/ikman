@@ -1,14 +1,26 @@
 name: Scrape ikman.lk
 
+# Minutes math (private repos, Free plan ≈ 2,000 min/month):
+#   every 5 min  ≈ 8k–20k+ min/month (easy to exhaust)
+#   every 15 min ≈ more sustainable with Playwright caching
+#   every 30–60 min fits Free more reliably
+# Public repos: GitHub-hosted Actions minutes are free (subject to fair use).
+# Manual "Run Now" still works via workflow_dispatch.
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    # Default: every 15 minutes (UTC). Change to '*/30 * * * *' if you hit quota.
+    - cron: '*/15 * * * *'
   workflow_dispatch:
+
+# Never stack scrapes — one at a time (queued runs wait; no parallel bill)
+concurrency:
+  group: scrape-ikman
+  cancel-in-progress: false
 
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 25
 
     steps:
       - name: Checkout
@@ -21,16 +33,29 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        # Prefer offline cache when lockfile unchanged
+        run: npm ci --prefer-offline
 
-      - name: Install Playwright browser
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Playwright Chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install chromium --with-deps
+
+      # System libs are not in the browser cache; still needed on cache hit
+      - name: Install Playwright system deps
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
 
       - name: Run scraper
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          # Optional: chat that receives scrape-progress messages (not listing alerts)
           TELEGRAM_ADMIN_CHAT_ID: ${{ secrets.TELEGRAM_ADMIN_CHAT_ID }}
         run: npx tsx scraper/index.ts

@@ -1,8 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { getLatestScrapeRun } from './db'
 
-/** Minimum gap between scrape triggers (matches GitHub Actions cron interval). */
-export const SCRAPE_COOLDOWN_MS = 5 * 60 * 1000
+/** Minimum gap between scrape triggers (align with GitHub Actions cron). */
+export const SCRAPE_COOLDOWN_MS = 15 * 60 * 1000
 
 export type TriggerScrapeResult =
   | { ok: true; message: string }

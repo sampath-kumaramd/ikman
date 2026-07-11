@@ -36,7 +36,7 @@ export function Hero() {
           <Reveal inView={false}>
             <span className="glass-subtle inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-medium text-sky-300">
               <Radar size={13} className="animate-pulse" />
-              Scanning ikman.lk every 5 minutes
+              Scanning ikman.lk every 15 minutes
             </span>
           </Reveal>
 
@@ -61,7 +61,7 @@ export function Hero() {
           <Reveal inView={false} delay={0.3}>
             <div className="mt-9 flex flex-col items-center gap-4 sm:flex-row lg:justify-start sm:justify-center">
               <ShimmerButton
-                onClick={() => router.push('/login')}
+                onClick={() => router.push('/sign-up')}
                 background="rgba(2,16,36,1)"
                 shimmerColor="#7dd3fc"
                 className="px-8 py-3.5 text-sm font-semibold shadow-[0_16px_32px_-12px_rgba(0,0,0,0.6)]"

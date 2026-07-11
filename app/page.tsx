@@ -10,7 +10,7 @@ const bricolage = Bricolage_Grotesque({
 export const metadata: Metadata = {
   title: 'ikman Rental Tracker — Never miss a boarding place again',
   description:
-    'Instant Telegram alerts for new ikman.lk rental & boarding listings matching your area, budget and property type. Scraped every 5 minutes, around the clock.',
+    'Instant Telegram alerts for new ikman.lk rental & boarding listings matching your area, budget and property type. Scraped regularly, around the clock.',
 }
 
 export default function HomePage() {
