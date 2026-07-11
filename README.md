@@ -150,7 +150,7 @@ app/
     telegram/connect/    POST deep link · GET status · DELETE unlink
     telegram/test/       POST test message to the user's chat
     telegram-webhook/    Telegram updates: /start linking + commands
-    trigger-scrape/      POST → triggers GitHub Actions (115 min cooldown)
+    trigger-scrape/      POST → triggers GitHub Actions (15 min cooldown)
     account/             DELETE → delete the signed-in user
 
 components/
