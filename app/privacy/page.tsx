@@ -55,8 +55,8 @@ export default function PrivacyPage() {
               </li>
               <li>
                 <strong className="text-zinc-300">Analytics:</strong> product usage events
-                and page views via PostHog when configured (e.g. features used, pages
-                visited). These help improve the product.
+                and page views via PostHog and/or Vercel Analytics (e.g. features used,
+                pages visited). These help improve the product.
               </li>
               <li>
                 <strong className="text-zinc-300">Listing cache:</strong> titles, prices,
@@ -82,7 +82,7 @@ export default function PrivacyPage() {
               Application data is stored in Supabase (PostgreSQL). Authentication is
               provided by Clerk. The web app is hosted on Vercel. Scrapes may run on
               GitHub Actions. Emails (e.g. feedback notifications) may be sent via Resend.
-              Analytics may be processed by PostHog when enabled. Listing content originates
+              Analytics may be processed by PostHog and Vercel. Listing content originates
               from public ikman.lk pages.
             </p>
           </section>
