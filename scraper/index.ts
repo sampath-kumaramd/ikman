@@ -36,8 +36,10 @@ async function main() {
 
   try {
     // ── Users ─────────────────────────────────────────────────────────────────
+    // Public progress must NOT expose user counts, area unions, or other users' criteria.
+    await progress.step('Preparing search…')
     const users = await getOnboardedUserSettings(db)
-    await progress.step(`${users.length} active user${users.length !== 1 ? 's' : ''}`)
+    console.log(`Active onboarded users: ${users.length}`)
 
     if (!users.length) {
       await progress.done(0, 0)
@@ -54,11 +56,12 @@ async function main() {
 
     // ── Existing IDs ──────────────────────────────────────────────────────────
     const existingIds = await getExistingIkmanIds(db)
-    await progress.step(`${existingIds.size} existing listings in DB`)
+    await progress.step(
+      'Scanning ikman.lk…',
+      `${users.length} users · ${areas.length} area(s) × ${listingTypes.length} type(s) · ${existingIds.size} existing in DB`,
+    )
 
     // ── Scrape ────────────────────────────────────────────────────────────────
-    await progress.step(`Scraping ${areas.length} area(s) × ${listingTypes.length} type(s)…`)
-
     const browser = await chromium.launch()
 
     try {
@@ -70,11 +73,17 @@ async function main() {
         max_bedrooms:  maxBedrooms,
       }, browser)
 
-      await progress.step(`Scraped ${scraped.length} listings matching filters`)
+      await progress.step(
+        'Checking for new listings…',
+        `Scraped ${scraped.length} listings matching union filters`,
+      )
 
       // ── New listings ────────────────────────────────────────────────────────
       const newListings = scraped.filter((l) => l.ikman_id && !existingIds.has(l.ikman_id))
-      await progress.step(`${newListings.length} new listing${newListings.length !== 1 ? 's' : ''} to save`)
+      await progress.step(
+        newListings.length ? 'Found new listings…' : 'Checking for new listings…',
+        `${newListings.length} new listing(s) to save`,
+      )
 
       if (!newListings.length) {
         await progress.done(0, scraped.length)
@@ -95,14 +104,19 @@ async function main() {
 
       // ── Detail pages ────────────────────────────────────────────────────────
       await progress.step(
-        `Fetching details for ${toEnrich.length} listing${toEnrich.length !== 1 ? 's' : ''}…`,
+        'Loading listing details…',
+        `Fetching details for ${toEnrich.length}/${newListings.length} listings`,
       )
 
       let detailsDone = 0
       const onDetailFetched = async () => {
         detailsDone++
-        if (detailsDone % 3 === 0 || detailsDone === toEnrich.length) {
-          await progress.step(`Fetching details… ${detailsDone}/${toEnrich.length}`)
+        if (detailsDone % 5 === 0 || detailsDone === toEnrich.length) {
+          // Public stays generic; only admin sees n/N
+          await progress.step(
+            'Loading listing details…',
+            `Details ${detailsDone}/${toEnrich.length}`,
+          )
         }
       }
 
@@ -112,14 +126,17 @@ async function main() {
 
       // ── Save ─────────────────────────────────────────────────────────────────
       // Save all new listings (even those without detail enrichment this run).
-      await progress.step('Saving to database…')
+      await progress.step('Saving results…', `Upserting ${newListings.length} listings`)
 
       const saved = await upsertListings(
         db,
         newListings.map((l) => sanitizeListingForDb(l)) as Omit<Listing, 'id' | 'created_at'>[],
       )
 
-      await progress.step(`Saved ${saved.length} listing${saved.length !== 1 ? 's' : ''}`)
+      await progress.step(
+        'Sending your alerts…',
+        `Saved ${saved.length}; matching per user…`,
+      )
 
       // ── Per-user matching + notifications ───────────────────────────────────
       const telegramToken = process.env.TELEGRAM_BOT_TOKEN ?? ''
@@ -147,7 +164,10 @@ async function main() {
         }
       }
 
-      await progress.step(`Sent ${alertsSent} Telegram alert${alertsSent !== 1 ? 's' : ''}`)
+      await progress.step(
+        'Almost done…',
+        `Sent ${alertsSent} Telegram alert(s) across all users`,
+      )
       await progress.done(saved.length, scraped.length)
       console.log(`Done. Processed ${saved.length} new listings, sent ${alertsSent} alerts.`)
 

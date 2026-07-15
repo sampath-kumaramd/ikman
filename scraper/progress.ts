@@ -3,10 +3,19 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 const TELEGRAM_API = 'https://api.telegram.org'
 const TG_EDIT_THROTTLE_MS = 2500  // Telegram allows ~1 edit/sec; we're conservative
 
+/**
+ * Progress for a scrape run.
+ *
+ * - `step(publicText)` → written to scrape_runs (every user's dashboard)
+ * - optional `adminDetail` → console + admin Telegram only (never other users)
+ */
 export class ScrapeProgress {
   private runId:      string | null = null
   private msgId:      number | null = null
+  /** User-visible steps (dashboard). */
   private steps:      string[]      = []
+  /** Admin-only detail trail for Telegram. */
+  private adminSteps: string[]      = []
   private lastEdit    = 0
   private readonly token:  string
   private readonly chatId: string
@@ -31,43 +40,56 @@ export class ScrapeProgress {
     }
   }
 
-  /** Log a progress step. Plain text for DB/dashboard; HTML only for Telegram. */
-  async step(text: string): Promise<void> {
-    this.steps.push(text)
-    console.log(`  [progress] ${text}`)
-    this._dbUpdate({ current_step: text, steps_log: this.steps })  // fire-and-forget
+  /**
+   * Log progress.
+   * @param publicText Safe for all signed-in users (no area lists, user counts, etc.)
+   * @param adminDetail Optional detail for logs + admin Telegram only
+   */
+  async step(publicText: string, adminDetail?: string): Promise<void> {
+    // Avoid duplicate consecutive public steps (e.g. detail progress)
+    if (this.steps[this.steps.length - 1] !== publicText) {
+      this.steps.push(publicText)
+    }
+    const adminLine = adminDetail ?? publicText
+    this.adminSteps.push(adminLine)
+    console.log(`  [progress] ${adminLine}`)
+    this._dbUpdate({ current_step: publicText, steps_log: this.steps })
     await this._tgEdit(this._progressTextHtml())
   }
 
   async done(newCount: number, totalCount: number): Promise<void> {
-    // Plain text for dashboard / scrape_runs.current_step
-    const plain = newCount > 0
-      ? `✅ ${newCount} new listing${newCount !== 1 ? 's' : ''} saved (${totalCount} scraped total)`
-      : `😴 No new listings this run (${totalCount} scraped)`
+    // User-facing: no global scrape totals that reveal multi-user pool size
+    const plain =
+      newCount > 0
+        ? 'Scan finished — check your dashboard for new matches'
+        : 'Scan finished — no new matches this run'
 
-    // HTML only for Telegram admin chat
-    const html = newCount > 0
-      ? `✅ <b>${newCount} new listing${newCount !== 1 ? 's' : ''} saved</b> (${totalCount} scraped total)`
-      : `😴 No new listings this run (${totalCount} scraped)`
+    const html =
+      newCount > 0
+        ? `✅ <b>${newCount} new listing${newCount !== 1 ? 's' : ''} saved</b> (${totalCount} scraped total)`
+        : `😴 No new listings this run (${totalCount} scraped)`
+
+    console.log(`  [progress] done: ${newCount} new / ${totalCount} scraped`)
 
     await this.db.from('scrape_runs').update({
-      status:      'done',
+      status:       'done',
       current_step: plain,
-      new_count:   newCount,
-      total_count: totalCount,
-      finished_at: new Date().toISOString(),
-      steps_log:   this.steps,
+      new_count:    newCount,
+      total_count:  totalCount,
+      finished_at:  new Date().toISOString(),
+      steps_log:    this.steps,
     }).eq('id', this.runId)
 
-    // Force-edit the final state regardless of throttle
     this.lastEdit = 0
     await this._tgEdit(html)
   }
 
   async fail(err: string): Promise<void> {
-    const plain = `Failed: ${err}`
+    const plain = 'Scan failed — we will try again on the next schedule'
+    console.error(`  [progress] fail: ${err}`)
+
     await this.db.from('scrape_runs').update({
-      status:      'failed',
+      status:       'failed',
       current_step: plain,
       error:        err,
       finished_at:  new Date().toISOString(),
@@ -81,7 +103,7 @@ export class ScrapeProgress {
   // ── private ────────────────────────────────────────────────────────────────
 
   private _progressTextHtml(): string {
-    const recent = this.steps.slice(-6)
+    const recent = this.adminSteps.slice(-8)
     return [
       '🔄 <b>Scrape in progress</b>',
       '',

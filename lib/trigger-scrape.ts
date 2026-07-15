@@ -95,8 +95,8 @@ export async function triggerScrape(client: SupabaseClient): Promise<TriggerScra
     .from('scrape_runs')
     .insert({
       status: 'running',
-      current_step: 'Queued via trigger…',
-      steps_log: ['Queued via dashboard / Telegram'],
+      current_step: 'Scan queued…',
+      steps_log: ['Scan queued…'],
     })
     .select('id')
     .single()
@@ -112,7 +112,7 @@ export async function triggerScrape(client: SupabaseClient): Promise<TriggerScra
         .from('scrape_runs')
         .update({
           status: 'failed',
-          current_step: `Failed to dispatch: ${dispatch.error}`,
+          current_step: 'Scan failed — we will try again on the next schedule',
           error: dispatch.error,
           finished_at: new Date().toISOString(),
         })
@@ -128,7 +128,7 @@ export async function triggerScrape(client: SupabaseClient): Promise<TriggerScra
       .from('scrape_runs')
       .update({
         status: 'done',
-        current_step: 'Dispatched to GitHub Actions',
+        current_step: 'Scan queued…',
         finished_at: new Date().toISOString(),
       })
       .eq('id', queued.id)

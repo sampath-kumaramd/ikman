@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getAdminClient } from '@/lib/supabase'
 import { getAuthUser } from '@/lib/auth'
 import { getLatestScrapeRun } from '@/lib/db'
+import { toPublicScrapeStatus } from '@/lib/scrape-status-public'
 
 export async function GET() {
   try {
@@ -9,7 +10,7 @@ export async function GET() {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const run = await getLatestScrapeRun(getAdminClient())
-    return NextResponse.json(run ?? { status: 'idle' })
+    return NextResponse.json(toPublicScrapeStatus(run))
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 })
   }

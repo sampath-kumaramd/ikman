@@ -88,23 +88,26 @@ export function ScrapeStatusBanner({ onRunCompleted }: Props) {
           {formatDistanceToNow(new Date(run.started_at), { addSuffix: true })}
         </span>
 
-        {/* Expand toggle — only show if there are steps */}
-        {(run.steps_log?.length ?? 0) > 0 && (
+        {/* Expand only when multiple public phases exist */}
+        {(run.steps_log?.length ?? 0) > 1 && (
           <button
+            type="button"
             onClick={() => setExpanded((e) => !e)}
             className="text-zinc-500 hover:text-white ml-1 shrink-0"
+            aria-label={expanded ? 'Hide steps' : 'Show steps'}
           >
             {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           </button>
         )}
       </div>
 
-      {/* Expanded step log */}
-      {expanded && run.steps_log?.length > 0 && (
-        <div className="mt-2 pl-5 space-y-0.5 border-t border-white/10 pt-2">
+      {/* Expanded step log — already sanitized by /api/scrape-status */}
+      {expanded && (run.steps_log?.length ?? 0) > 1 && (
+        <div className="mt-2 space-y-0.5 border-t border-white/10 pt-2 pl-5">
           {run.steps_log.map((s, i) => (
-            <div key={i} className="text-xs text-zinc-400 flex items-center gap-1.5">
-              <span className="text-emerald-400">✓</span> {s}
+            <div key={i} className="flex items-center gap-1.5 text-xs text-zinc-400">
+              <span className="text-emerald-400">✓</span>
+              {plainStep(s, '…')}
             </div>
           ))}
         </div>
