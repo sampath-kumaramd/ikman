@@ -81,22 +81,37 @@ async function main() {
         return
       }
 
+      // First multi-user runs can discover hundreds of "new" ads. Cap detail
+      // fetches so one job finishes before the next cron (default 10 min).
+      const maxDetailsRaw = parseInt(process.env.MAX_DETAIL_FETCHES ?? '40', 10)
+      const maxDetails =
+        Number.isFinite(maxDetailsRaw) && maxDetailsRaw > 0 ? maxDetailsRaw : 40
+      const toEnrich = newListings.slice(0, maxDetails)
+      if (newListings.length > toEnrich.length) {
+        console.log(
+          `Capping detail fetches: ${toEnrich.length}/${newListings.length} (set MAX_DETAIL_FETCHES to raise)`,
+        )
+      }
+
       // ── Detail pages ────────────────────────────────────────────────────────
-      await progress.step(`Fetching details for ${newListings.length} listings…`)
+      await progress.step(
+        `Fetching details for ${toEnrich.length} listing${toEnrich.length !== 1 ? 's' : ''}…`,
+      )
 
       let detailsDone = 0
       const onDetailFetched = async () => {
         detailsDone++
-        if (detailsDone % 3 === 0 || detailsDone === newListings.length) {
-          await progress.step(`Fetching details… ${detailsDone}/${newListings.length}`)
+        if (detailsDone % 3 === 0 || detailsDone === toEnrich.length) {
+          await progress.step(`Fetching details… ${detailsDone}/${toEnrich.length}`)
         }
       }
 
-      await enrichListingsWithDetails(browser, newListings, {
+      await enrichListingsWithDetails(browser, toEnrich, {
         onProgress: onDetailFetched,
       })
 
       // ── Save ─────────────────────────────────────────────────────────────────
+      // Save all new listings (even those without detail enrichment this run).
       await progress.step('Saving to database…')
 
       const saved = await upsertListings(

@@ -8,7 +8,12 @@ const TYPE_SLUGS: Record<string, string> = {
   annex:     'room-annex-rentals',
 }
 
-const MAX_PAGES = 5 // cap at 5 pages (~125 ads) per category/area combo
+/** Pages per area×type. Default 2 keeps multi-user runs under a 10-min schedule. Override with SCRAPE_MAX_PAGES. */
+function maxPages(): number {
+  const n = parseInt(process.env.SCRAPE_MAX_PAGES ?? '2', 10)
+  return Number.isFinite(n) && n > 0 ? Math.min(n, 10) : 2
+}
+
 const DEFAULT_DETAIL_CONCURRENCY = 3
 const MIN_SCRAPE_INTERVAL_MS = 700 // ~100 req/min, be polite to ikman.lk
 
@@ -507,6 +512,11 @@ async function scrapeDetailPage(
 
 export async function runScraper(config: ScrapeConfig, browser: Browser): Promise<Partial<Listing>[]> {
   const allListings: Partial<Listing>[] = []
+  const pages = maxPages()
+  const combos = config.areas.length * config.listing_types.length
+  console.log(
+    `Scrape plan: ${config.areas.length} area(s) × ${config.listing_types.length} type(s) = ${combos} combo(s), up to ${pages} page(s) each`,
+  )
 
   for (const area of config.areas) {
     const areaSlug = areaToSlug(area)
@@ -518,7 +528,7 @@ export async function runScraper(config: ScrapeConfig, browser: Browser): Promis
     for (const type of config.listing_types) {
       const categorySlug = TYPE_SLUGS[type] ?? 'apartment-rentals'
 
-      for (let page = 1; page <= MAX_PAGES; page++) {
+      for (let page = 1; page <= pages; page++) {
         const params = new URLSearchParams({
           'money.price.maximum': String(config.max_price),
           sort:  'date',
