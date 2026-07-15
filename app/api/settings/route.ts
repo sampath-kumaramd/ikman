@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { sanitizeAreas } from '@/lib/areas'
 import { getAdminClient } from '@/lib/supabase'
 import { getAuthUser } from '@/lib/auth'
+import { MAX_RENT_BUDGET, MIN_RENT_BUDGET } from '@/lib/criteria'
 import { DEFAULT_CRITERIA, LISTING_TYPES, getUserSettings, upsertUserSettings } from '@/lib/db'
 import type { ListingType, SettingsResponse, UserSettings } from '@/lib/types'
 
@@ -46,7 +47,12 @@ export async function PUT(req: NextRequest) {
         (t): t is ListingType => LISTING_TYPES.includes(t as ListingType),
       )
     }
-    if (typeof body.max_price === 'number'    && body.max_price > 0)    patch.max_price = body.max_price
+    if (typeof body.max_price === 'number' && body.max_price > 0) {
+      patch.max_price = Math.min(
+        MAX_RENT_BUDGET,
+        Math.max(MIN_RENT_BUDGET, Math.round(body.max_price)),
+      )
+    }
     if (typeof body.min_bedrooms === 'number' && body.min_bedrooms > 0) patch.min_bedrooms = body.min_bedrooms
     if (typeof body.max_bedrooms === 'number' && body.max_bedrooms > 0) patch.max_bedrooms = body.max_bedrooms
     if (typeof body.notifications_enabled === 'boolean') {

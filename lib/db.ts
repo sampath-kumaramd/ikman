@@ -17,8 +17,9 @@ export const LISTING_TYPES: ListingType[] = ['apartment', 'annex', 'house']
 
 export const DEFAULT_CRITERIA: SearchCriteria = {
   areas: [],
-  listing_types: LISTING_TYPES,
-  max_price: 75000,
+  // Empty by default — user must pick property types (onboarding + settings).
+  listing_types: [],
+  max_price: 75_000,
   min_bedrooms: 1,
   max_bedrooms: 2,
 }

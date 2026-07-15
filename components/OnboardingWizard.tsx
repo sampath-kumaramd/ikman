@@ -12,7 +12,7 @@ import type { SearchCriteria } from '@/lib/types'
 
 const DEFAULT_CRITERIA: SearchCriteria = {
   areas: [],
-  listing_types: ['apartment', 'annex', 'house'],
+  listing_types: [],
   max_price: 75000,
   min_bedrooms: 1,
   max_bedrooms: 2,
@@ -41,7 +41,9 @@ export function OnboardingWizard({ telegramConnected }: { telegramConnected: boo
         if (Array.isArray(d?.areas) && d.areas.length) {
           setCriteria({
             areas: d.areas,
-            listing_types: d.listing_types?.length ? d.listing_types : DEFAULT_CRITERIA.listing_types,
+            listing_types: Array.isArray(d.listing_types)
+              ? d.listing_types
+              : DEFAULT_CRITERIA.listing_types,
             max_price: d.max_price || DEFAULT_CRITERIA.max_price,
             min_bedrooms: d.min_bedrooms || DEFAULT_CRITERIA.min_bedrooms,
             max_bedrooms: d.max_bedrooms || DEFAULT_CRITERIA.max_bedrooms,

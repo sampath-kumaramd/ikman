@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { X, Plus, Search, MapPin } from 'lucide-react'
+import { X, Plus, Search, MapPin, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Slider } from '@/components/ui/slider'
@@ -25,6 +25,7 @@ import {
   isSupportedArea,
   normalizeAreaName,
 } from '@/lib/areas'
+import { MAX_RENT_BUDGET, MIN_RENT_BUDGET, RENT_BUDGET_STEP } from '@/lib/criteria'
 import { cn } from '@/lib/utils'
 import type { ListingType, SearchCriteria } from '@/lib/types'
 
@@ -344,7 +345,7 @@ export function CriteriaForm({ value, onChange }: CriteriaFormProps) {
 
       <Section
         title="Property Types"
-        description="Choose which property types to include in results."
+        description="Tap the types you want — none are selected by default."
       >
         <div className="flex flex-wrap gap-2">
           {LISTING_TYPE_OPTIONS.map((type) => {
@@ -355,14 +356,29 @@ export function CriteriaForm({ value, onChange }: CriteriaFormProps) {
                 type="button"
                 variant={selected ? 'default' : 'outline'}
                 size="sm"
-                className={cn('capitalize', chipClasses(selected))}
+                aria-pressed={selected}
+                className={cn(
+                  'capitalize gap-1.5 pr-3',
+                  chipClasses(selected),
+                  selected && 'ring-1 ring-sky-400/40',
+                )}
                 onClick={() => toggleType(type)}
               >
+                {selected && (
+                  <span className="flex size-4 items-center justify-center rounded-full bg-white/20">
+                    <Check size={12} strokeWidth={3} aria-hidden />
+                  </span>
+                )}
                 {type}
               </Button>
             )
           })}
         </div>
+        {value.listing_types.length === 0 && (
+          <p className="mt-3 text-xs text-zinc-500">
+            Select at least one property type to continue.
+          </p>
+        )}
       </Section>
 
       <Section
@@ -378,17 +394,19 @@ export function CriteriaForm({ value, onChange }: CriteriaFormProps) {
               </span>
             </div>
             <Slider
-              min={10000}
-              max={200000}
-              step={5000}
-              value={[value.max_price]}
+              min={MIN_RENT_BUDGET}
+              max={MAX_RENT_BUDGET}
+              step={RENT_BUDGET_STEP}
+              value={[Math.min(MAX_RENT_BUDGET, Math.max(MIN_RENT_BUDGET, value.max_price))]}
               onValueChange={(val) => {
                 const v = Array.isArray(val) ? val[0] : val
-                onChange({ ...value, max_price: v as number })
+                const n = Math.min(MAX_RENT_BUDGET, Math.max(MIN_RENT_BUDGET, Number(v)))
+                onChange({ ...value, max_price: n })
               }}
             />
             <div className="flex justify-between text-xs text-muted-foreground dark:text-zinc-500">
-              <span>Rs. 10,000</span><span>Rs. 200,000</span>
+              <span>Rs. {MIN_RENT_BUDGET.toLocaleString()}</span>
+              <span>Rs. {MAX_RENT_BUDGET.toLocaleString()}</span>
             </div>
           </div>
 

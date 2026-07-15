@@ -5,6 +5,7 @@ import { RefreshCw, Loader2, Home, Building2, LayoutGrid } from 'lucide-react'
 import { ListingCard } from '@/components/ListingCard'
 import { FilterBar } from '@/components/FilterBar'
 import { ScrapeStatusBanner } from '@/components/ScrapeStatusBanner'
+import { BackToTop } from '@/components/BackToTop'
 import { Button } from '@/components/ui/button'
 import { track } from '@/lib/analytics'
 import type { Listing, ListingFilters } from '@/lib/types'
@@ -183,6 +184,8 @@ export default function DashboardPage() {
           </Button>
         </div>
       )}
+
+      <BackToTop />
     </div>
   )
 }

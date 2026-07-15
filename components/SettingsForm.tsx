@@ -15,7 +15,7 @@ import type { SearchCriteria, SettingsResponse } from '@/lib/types'
 
 const DEFAULT_CRITERIA: SearchCriteria = {
   areas: [],
-  listing_types: ['apartment', 'annex', 'house'],
+  listing_types: [],
   max_price: 75000,
   min_bedrooms: 1,
   max_bedrooms: 2,
