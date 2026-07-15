@@ -7,9 +7,9 @@ name: Scrape ikman.lk
 # Public repos: GitHub-hosted Actions minutes are free (subject to fair use).
 # Manual "Run Now" still works via workflow_dispatch.
 on:
-  schedule:
+  #schedule:
     # Default: every 15 minutes (UTC). Change to '*/30 * * * *' if you hit quota.
-    - cron: '*/15 * * * *'
+    #- cron: '*/15 * * * *'
   workflow_dispatch:
 
 # Never stack scrapes — one at a time (queued runs wait; no parallel bill)
