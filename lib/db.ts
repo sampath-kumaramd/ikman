@@ -113,9 +113,11 @@ export async function linkTelegramChat(
 
 /**
  * Listings scoped to one user: rows are narrowed to the user's saved search
- * criteria first, then by any dashboard filters. `is_new` is computed per
- * user — a listing is new if it was scraped after the user signed up and they
- * haven't viewed it yet.
+ * criteria first, then by any dashboard filters.
+ *
+ * `is_new` is **per user only** (via `user_listing_states`). A listing is new
+ * until *this* user marks it viewed — signup time and other users' views do
+ * not affect it. Legacy `listings.is_new` is ignored.
  */
 export async function getListingsForUser(
   client: SupabaseClient,
@@ -150,8 +152,8 @@ export async function getListingsForUser(
   if (min_bedrooms)  query = query.gte('bedrooms', min_bedrooms)
   if (max_bedrooms)  query = query.lte('bedrooms', max_bedrooms)
 
+  // New / viewed filters use only this user's viewed set (not listing age)
   if (is_new === true) {
-    query = query.gte('created_at', settings.created_at)
     if (viewed.size) query = query.not('id', 'in', `(${[...viewed].join(',')})`)
   } else if (is_new === false) {
     if (!viewed.size) return { listings: [], total: 0 }
@@ -182,7 +184,7 @@ export async function getListingsForUser(
 
   const listings = ((data ?? []) as Listing[]).map((l) => ({
     ...l,
-    is_new: !viewed.has(l.id) && l.created_at >= settings.created_at,
+    is_new: !viewed.has(l.id),
   }))
 
   return { listings, total: count ?? 0 }

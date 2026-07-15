@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ExternalLink, Phone, MapPin, BedDouble, Calendar, Eye, EyeOff } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { Card, CardContent } from '@/components/ui/card'
@@ -25,6 +25,11 @@ export function ListingCard({ listing, onToggleViewed }: ListingCardProps) {
   const [imgError, setImgError] = useState(false)
   const [isNew, setIsNew]       = useState(listing.is_new)
   const [toggling, setToggling] = useState(false)
+
+  // Stay in sync when parent refetches (per-user is_new from API)
+  useEffect(() => {
+    setIsNew(listing.is_new)
+  }, [listing.id, listing.is_new])
 
   const photo = !imgError && listing.photos?.[0] ? listing.photos[0] : null
 
