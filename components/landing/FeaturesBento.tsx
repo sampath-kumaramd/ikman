@@ -8,13 +8,11 @@ const FEATURES: {
   icon: LucideIcon
   title: string
   body: string
-  wide?: boolean
 }[] = [
   {
     icon: Timer,
-    title: 'Scheduled scrapes',
-    body: 'We check ikman.lk on a fixed interval so new ads surface while they are still open.',
-    wide: true,
+    title: 'Every 10 minutes',
+    body: 'We check ikman.lk every 10 minutes so new ads surface while they are still open.',
   },
   {
     icon: Send,
@@ -40,40 +38,32 @@ const FEATURES: {
     icon: Eye,
     title: 'New vs viewed',
     body: 'Unseen listings stay highlighted so you always know what still needs a call.',
-    wide: true,
   },
 ]
 
 export function FeaturesBento() {
   return (
-    <section id="features" className="border-b border-white/[0.06]">
+    <section id="features" className="relative">
       <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:py-24">
         <Reveal>
           <div className="max-w-xl">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sky-400/90">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sky-300">
               Product
             </p>
             <h2 className="mt-3 font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
               Everything you need to move first
             </h2>
             <p className="mt-3 text-base leading-relaxed text-zinc-400">
-              Good places in Colombo go fast. This stack exists to shorten the gap between
-              “posted” and “you saw it”.
+              Good places go fast. This stack shortens the gap between “posted” and “you saw it”.
             </p>
           </div>
         </Reveal>
 
-        <div className="mt-14 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map((f, i) => (
             <Reveal key={f.title} delay={i * 0.05}>
-              <article
-                className={
-                  f.wide
-                    ? 'flex h-full flex-col rounded-2xl border border-white/[0.07] bg-white/[0.02] p-6 sm:col-span-2 lg:col-span-1 lg:min-h-[11rem]'
-                    : 'flex h-full flex-col rounded-2xl border border-white/[0.07] bg-white/[0.02] p-6 lg:min-h-[11rem]'
-                }
-              >
-                <div className="flex size-9 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.03] text-zinc-300">
+              <article className="glass flex h-full flex-col rounded-2xl p-6 transition-colors hover:bg-white/[0.04] lg:min-h-[11rem]">
+                <div className="glass-subtle flex size-10 items-center justify-center rounded-xl text-sky-300">
                   <f.icon size={18} strokeWidth={1.75} />
                 </div>
                 <h3 className="mt-5 font-display text-base font-semibold text-white">{f.title}</h3>

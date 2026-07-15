@@ -10,7 +10,7 @@ const bricolage = Bricolage_Grotesque({
 export const metadata: Metadata = {
   title: 'Rental Tracker — Telegram alerts for ikman.lk rentals',
   description:
-    'Track ikman.lk apartments, annexes and houses by area and budget. Get Telegram alerts when new matching listings are posted.',
+    'Track ikman.lk apartments, annexes and houses by area and budget. We check every 10 minutes and send Telegram alerts for new matches.',
 }
 
 export default function HomePage() {

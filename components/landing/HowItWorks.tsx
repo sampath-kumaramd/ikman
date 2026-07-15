@@ -16,17 +16,17 @@ const STEPS = [
   {
     step: '03',
     title: 'Get matches first',
-    text: 'We scrape ikman on a schedule and push listings that fit your criteria to your chat and dashboard.',
+    text: 'We scrape ikman every 10 minutes and push listings that fit your criteria to your chat and dashboard.',
   },
 ] as const
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="border-b border-white/[0.06]">
+    <section id="how-it-works" className="relative">
       <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:py-24">
         <Reveal>
           <div className="max-w-xl">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sky-400/90">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-sky-300">
               How it works
             </p>
             <h2 className="mt-3 font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
@@ -38,27 +38,21 @@ export function HowItWorks() {
           </div>
         </Reveal>
 
-        <ol className="mt-14 grid gap-0 border-t border-white/[0.06] md:grid-cols-3">
+        <div className="mt-12 grid gap-4 md:grid-cols-3">
           {STEPS.map((item, i) => (
             <Reveal key={item.step} delay={i * 0.08}>
-              <li
-                className={
-                  i < STEPS.length - 1
-                    ? 'border-b border-white/[0.06] py-8 md:border-b-0 md:border-r md:pr-8 md:pt-10 md:pb-2'
-                    : 'py-8 md:pt-10 md:pb-2 md:pl-8'
-                }
-              >
-                <span className="font-mono text-xs font-medium tabular-nums text-zinc-600">
+              <div className="glass group relative h-full overflow-hidden rounded-2xl p-6 transition-colors hover:bg-white/[0.04]">
+                <span className="font-mono text-xs font-medium tabular-nums text-sky-300/80">
                   {item.step}
                 </span>
                 <h3 className="mt-4 font-display text-lg font-semibold text-white">
                   {item.title}
                 </h3>
-                <p className="mt-2 max-w-sm text-sm leading-relaxed text-zinc-400">{item.text}</p>
-              </li>
+                <p className="mt-2 text-sm leading-relaxed text-zinc-400">{item.text}</p>
+              </div>
             </Reveal>
           ))}
-        </ol>
+        </div>
       </div>
     </section>
   )
