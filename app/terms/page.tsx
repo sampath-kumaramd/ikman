@@ -28,7 +28,9 @@ export default function TermsPage() {
               Rental Tracker is an independent tool that monitors publicly available
               rental listings on ikman.lk and notifies you of matches based on filters
               you set. It is not affiliated with, endorsed by, or partnered with
-              ikman.lk or its operators.
+              ikman.lk or its operators. Automated collection of listing data may conflict
+              with third-party terms of service; the service is provided for personal
+              house-hunting convenience and may be changed or discontinued at any time.
             </p>
           </section>
 

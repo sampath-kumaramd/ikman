@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthUser } from '@/lib/auth'
 import { getAdminClient } from '@/lib/supabase'
+import { sendFeedbackEmail } from '@/lib/email'
 import { sendTelegram } from '@/scraper/telegram'
 
 const CATEGORIES = new Set(['feature', 'bug', 'question', 'other'])
@@ -47,7 +48,6 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (error) {
-      // Table missing is a common first-time setup issue
       if (error.code === '42P01' || /relation .* does not exist/i.test(error.message)) {
         return NextResponse.json(
           {
@@ -60,7 +60,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // Optional ping to admin Telegram
+    // Email to FEEDBACK_TO_EMAIL when Resend is configured
+    const emailSent = await sendFeedbackEmail({
+      id: data.id,
+      category,
+      message,
+      page,
+      userId: user.id,
+      userEmail: user.email,
+      createdAt: data.created_at,
+    })
+
+    // Optional Telegram admin ping
     const token = process.env.TELEGRAM_BOT_TOKEN
     const adminChat =
       process.env.TELEGRAM_ADMIN_CHAT_ID || process.env.TELEGRAM_CHAT_ID
@@ -70,13 +81,14 @@ export async function POST(req: NextRequest) {
         `💬 <b>New ${escapeHtml(category)} request</b>`,
         user.email ? `From: ${escapeHtml(user.email)}` : `User: <code>${escapeHtml(user.id)}</code>`,
         page ? `Page: ${escapeHtml(page)}` : null,
+        emailSent ? '📧 Email sent' : '📧 Email skipped (no RESEND_API_KEY or send failed)',
         '',
         escapeHtml(preview),
       ].filter(Boolean)
       void sendTelegram(token, adminChat, lines.join('\n'))
     }
 
-    return NextResponse.json({ ok: true, id: data.id })
+    return NextResponse.json({ ok: true, id: data.id, email_sent: emailSent })
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 })
   }

@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Rental Tracker — LinkedIn promo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 1200px;
+      height: 627px;
+      overflow: hidden;
+      font-family: ui-sans-serif, system-ui, -apple-system, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #07090f;
+      color: #f4f4f5;
+    }
+    .frame {
+      width: 1200px;
+      height: 627px;
+      position: relative;
+      background:
+        radial-gradient(ellipse 70% 55% at 18% 10%, rgba(56, 130, 246, 0.2), transparent 55%),
+        radial-gradient(ellipse 45% 50% at 92% 85%, rgba(99, 102, 241, 0.1), transparent 50%),
+        #07090f;
+      overflow: hidden;
+    }
+    .grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(to right, rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse 80% 70% at 40% 30%, black 15%, transparent 72%);
+      pointer-events: none;
+    }
+    .content {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 0.92fr 1.18fr;
+      height: 100%;
+      padding: 32px 36px 28px 40px;
+      gap: 20px;
+    }
+    .left {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 16px;
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(145deg, #38bdf8, #2563eb);
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 13px;
+      color: white;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 6px 16px -6px rgba(37, 99, 235, 0.6);
+    }
+    .brand-name {
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: -0.02em;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #7dd3fc;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #34d399;
+      box-shadow: 0 0 8px #34d399;
+    }
+    h1 {
+      font-size: 40px;
+      line-height: 1.07;
+      letter-spacing: -0.035em;
+      font-weight: 800;
+    }
+    h1 .grad {
+      display: block;
+      background: linear-gradient(90deg, #7dd3fc, #60a5fa, #818cf8);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .sub {
+      font-size: 14.5px;
+      line-height: 1.5;
+      color: #a1a1aa;
+      max-width: 360px;
+    }
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+    .chip {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #d4d4d8;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .url {
+      font-size: 13px;
+      font-weight: 600;
+      color: #38bdf8;
+    }
+    .footer {
+      position: absolute;
+      left: 40px;
+      bottom: 20px;
+      font-size: 10.5px;
+      color: #52525b;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      z-index: 2;
+    }
+
+    /* ── Device stage ─────────────────────────────────────── */
+    .stage {
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      height: 100%;
+      padding: 8px 8px 18px 0;
+    }
+
+    /* ── Laptop ───────────────────────────────────────────── */
+    .laptop {
+      position: relative;
+      width: 560px;
+      flex-shrink: 0;
+      filter: drop-shadow(0 28px 40px rgba(0, 0, 0, 0.55));
+      transform: perspective(1400px) rotateY(6deg) rotateX(4deg);
+      transform-style: preserve-3d;
+    }
+    .laptop-lid {
+      position: relative;
+      border-radius: 12px 12px 0 0;
+      background: linear-gradient(180deg, #3f3f46 0%, #27272a 40%, #18181b 100%);
+      padding: 10px 10px 8px;
+      border: 1px solid #52525b;
+      border-bottom: none;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.12),
+        inset 0 -1px 0 rgba(0,0,0,0.4);
+    }
+    .laptop-lid::before {
+      /* camera notch */
+      content: "";
+      position: absolute;
+      top: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #0a0a0a;
+      box-shadow: inset 0 0 0 1px #27272a, 0 0 0 1px #3f3f46;
+      z-index: 3;
+    }
+    .laptop-screen {
+      position: relative;
+      border-radius: 4px;
+      overflow: hidden;
+      background: #000;
+      border: 1px solid #09090b;
+      aspect-ratio: 16 / 10.2;
+    }
+    /* Browser chrome */
+    .browser-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: 28px;
+      padding: 0 10px;
+      background: linear-gradient(180deg, #2a2a2e 0%, #1c1c1f 100%);
+      border-bottom: 1px solid #0a0a0a;
+    }
+    .traffic {
+      display: flex;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+    .traffic span {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    .traffic .r { background: #ff5f57; }
+    .traffic .y { background: #febc2e; }
+    .traffic .g { background: #28c840; }
+    .addr {
+      flex: 1;
+      height: 18px;
+      border-radius: 5px;
+      background: #0f0f12;
+      border: 1px solid #3f3f46;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 8px;
+      min-width: 0;
+    }
+    .addr .lock {
+      width: 8px;
+      height: 8px;
+      flex-shrink: 0;
+      opacity: 0.55;
+    }
+    .addr .url-text {
+      font-size: 9.5px;
+      color: #a1a1aa;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: 0.01em;
+    }
+    .browser-body {
+      height: calc(100% - 28px);
+      overflow: hidden;
+      background: #07090f;
+    }
+    .browser-body img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+    }
+    .laptop-base {
+      position: relative;
+      height: 12px;
+      margin: 0 -14px;
+      background: linear-gradient(180deg, #52525b 0%, #3f3f46 35%, #27272a 70%, #18181b 100%);
+      border-radius: 0 0 10px 10px;
+      border: 1px solid #52525b;
+      border-top: 1px solid #71717a;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.15),
+        0 4px 0 #0a0a0a;
+    }
+    .laptop-base::after {
+      /* trackpad hint */
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 56px;
+      height: 3px;
+      border-radius: 2px;
+      background: #18181b;
+      box-shadow: inset 0 1px 0 #3f3f46;
+    }
+    .laptop-shadow {
+      position: absolute;
+      left: 8%;
+      right: 8%;
+      bottom: -10px;
+      height: 18px;
+      background: radial-gradient(ellipse at center, rgba(0,0,0,0.55), transparent 70%);
+      filter: blur(4px);
+      z-index: -1;
+    }
+
+    /* ── Phone ────────────────────────────────────────────── */
+    .phone {
+      position: absolute;
+      right: 8px;
+      bottom: 22px;
+      width: 168px;
+      z-index: 5;
+      filter: drop-shadow(0 22px 28px rgba(0, 0, 0, 0.65));
+      transform: perspective(900px) rotateY(-8deg) rotateX(2deg) rotateZ(-2deg);
+    }
+    .phone-frame {
+      position: relative;
+      border-radius: 28px;
+      padding: 9px 8px;
+      background:
+        linear-gradient(145deg, #52525b 0%, #27272a 18%, #18181b 50%, #27272a 82%, #3f3f46 100%);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.25),
+        inset 0 -1px 0 rgba(0,0,0,0.5),
+        0 0 0 1px #0a0a0a;
+    }
+    /* Side buttons */
+    .phone-frame::before {
+      content: "";
+      position: absolute;
+      left: -2px;
+      top: 72px;
+      width: 3px;
+      height: 28px;
+      border-radius: 2px 0 0 2px;
+      background: linear-gradient(180deg, #52525b, #3f3f46);
+      box-shadow:
+        0 36px 0 0 #3f3f46,
+        0 68px 0 0 #3f3f46;
+    }
+    .phone-frame::after {
+      content: "";
+      position: absolute;
+      right: -2px;
+      top: 100px;
+      width: 3px;
+      height: 48px;
+      border-radius: 0 2px 2px 0;
+      background: linear-gradient(180deg, #52525b, #3f3f46);
+    }
+    .phone-bezel {
+      position: relative;
+      border-radius: 22px;
+      overflow: hidden;
+      background: #000;
+      border: 1.5px solid #0a0a0a;
+      box-shadow: inset 0 0 0 1px #27272a;
+    }
+    .dynamic-island {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 52px;
+      height: 14px;
+      border-radius: 999px;
+      background: #000;
+      z-index: 4;
+      box-shadow: 0 0 0 1px #111;
+    }
+    .phone-screen {
+      display: block;
+      width: 100%;
+      height: auto;
+      min-height: 300px;
+      max-height: 318px;
+      object-fit: cover;
+      object-position: top center;
+    }
+    .home-indicator {
+      position: absolute;
+      bottom: 5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 48px;
+      height: 3.5px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.35);
+      z-index: 4;
+    }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <div class="grid" aria-hidden="true"></div>
+    <div class="content">
+      <div class="left">
+        <div class="brand">
+          <div class="logo">RT</div>
+          <span class="brand-name">Rental Tracker</span>
+        </div>
+        <div class="pill"><span class="dot"></span> Checks every 10 min · Telegram alerts</div>
+        <h1>
+          Be first to the listing.
+          <span class="grad">Before everyone else calls.</span>
+        </h1>
+        <p class="sub">
+          Weekend vibe-coded for my own ikman.lk house hunt — now free for anyone tired of refreshing at midnight.
+        </p>
+        <div class="meta">
+          <span class="chip">10 min scans</span>
+          <span class="chip">300+ locations</span>
+          <span class="chip">Telegram</span>
+          <span class="chip">Free · no card</span>
+        </div>
+        <p class="url">ikman-iota.vercel.app</p>
+      </div>
+
+      <div class="stage">
+        <!-- Laptop with browser chrome -->
+        <div class="laptop">
+          <div class="laptop-lid">
+            <div class="laptop-screen">
+              <div class="browser-bar">
+                <div class="traffic" aria-hidden="true">
+                  <span class="r"></span><span class="y"></span><span class="g"></span>
+                </div>
+                <div class="addr">
+                  <svg class="lock" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                    <rect x="2.5" y="5.5" width="7" height="5" rx="1" stroke="#a1a1aa" stroke-width="1.1"/>
+                    <path d="M4 5.5V4a2 2 0 0 1 4 0v1.5" stroke="#a1a1aa" stroke-width="1.1" stroke-linecap="round"/>
+                  </svg>
+                  <span class="url-text">ikman-iota.vercel.app</span>
+                </div>
+              </div>
+              <div class="browser-body">
+                <img src="./web.png" alt="Desktop landing" />
+              </div>
+            </div>
+          </div>
+          <div class="laptop-base"></div>
+          <div class="laptop-shadow" aria-hidden="true"></div>
+        </div>
+
+        <!-- Phone with realistic frame -->
+        <div class="phone">
+          <div class="phone-frame">
+            <div class="phone-bezel">
+              <div class="dynamic-island" aria-hidden="true"></div>
+              <img class="phone-screen" src="./mobile.jpeg" alt="Mobile landing" />
+              <div class="home-indicator" aria-hidden="true"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="footer">Built in a weekend · Sri Lanka rentals</p>
+  </div>
+</body>
+</html>

@@ -1,24 +1,14 @@
 import { createClient } from '@supabase/supabase-js'
 import { chromium } from 'playwright'
 import { runScraper, enrichListingsWithDetails, sanitizeListingForDb } from './scraper'
+import type { ScrapedListing } from './scraper'
 import { sendTelegram, buildListingMessage } from './telegram'
 import {
   getOnboardedUserSettings, upsertListings, getExistingIkmanIds, createNotification,
 } from '../lib/db'
+import { matchesUser } from '../lib/match-listing'
 import { ScrapeProgress } from './progress'
-import type { Listing, UserSettings } from '../lib/types'
-
-/** Does a saved listing match one user's criteria? Null fields pass (price on request etc.). */
-function matchesUser(listing: Listing, user: UserSettings): boolean {
-  if (!listing.area || !user.areas.includes(listing.area)) return false
-  if (listing.listing_type && !user.listing_types.includes(listing.listing_type)) return false
-  if (listing.price != null && listing.price > user.max_price) return false
-  if (listing.bedrooms != null) {
-    if (listing.bedrooms < user.min_bedrooms) return false
-    if (listing.bedrooms > user.max_bedrooms) return false
-  }
-  return true
-}
+import type { Listing } from '../lib/types'
 
 async function main() {
   const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -139,6 +129,16 @@ async function main() {
       )
 
       // ── Per-user matching + notifications ───────────────────────────────────
+      // Re-attach foundInAreas from the scrape (DB only stores a single `area`).
+      const foundAreasByIkman = new Map<string, string[]>()
+      for (const l of newListings as ScrapedListing[]) {
+        if (!l.ikman_id) continue
+        foundAreasByIkman.set(
+          l.ikman_id,
+          l.foundInAreas?.length ? l.foundInAreas : l.area ? [l.area] : [],
+        )
+      }
+
       const telegramToken = process.env.TELEGRAM_BOT_TOKEN ?? ''
       if (!telegramToken) {
         console.warn('Telegram skipped — add TELEGRAM_BOT_TOKEN to env')
@@ -146,7 +146,15 @@ async function main() {
 
       let alertsSent = 0
       for (const user of users) {
-        const matches = saved.filter((l) => matchesUser(l, user))
+        const matches = saved.filter((l) =>
+          matchesUser(
+            {
+              ...l,
+              foundInAreas: foundAreasByIkman.get(l.ikman_id) ?? (l.area ? [l.area] : []),
+            },
+            user,
+          ),
+        )
         if (!matches.length) continue
 
         const canNotify =

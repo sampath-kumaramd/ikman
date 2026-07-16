@@ -16,12 +16,22 @@ export function LandingPage({ fontVariable }: LandingPageProps) {
   return (
     <div
       className={cn(
-        'dark min-h-screen overflow-x-hidden bg-[#06080d] text-zinc-100 antialiased',
+        'dark relative min-h-screen overflow-x-hidden bg-[#07090f] text-zinc-100 antialiased',
         fontVariable,
       )}
     >
+      {/* Same ambient scene as signed-in dashboard */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_-10%,rgba(56,130,246,0.14),transparent_70%)]"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_70%_60%_at_50%_0%,black_30%,transparent_75%)]"
+      />
+
       <LandingNav />
-      <main>
+      <main className="relative z-10">
         <Hero />
         <StatsStrip />
         <HowItWorks />
@@ -30,15 +40,12 @@ export function LandingPage({ fontVariable }: LandingPageProps) {
         <FinalCTA />
       </main>
 
-      <footer className="border-t border-white/[0.06]">
+      <footer className="relative z-10 border-t border-white/[0.08]">
         <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-12 sm:px-6 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-xs space-y-3">
             <div className="flex items-center gap-2.5">
-              <span
-                className="flex size-8 items-center justify-center rounded-lg bg-sky-500/15 text-sm font-bold text-sky-300"
-                aria-hidden
-              >
-                RT
+              <span className="text-xl" aria-hidden>
+                🏠
               </span>
               <span className="font-display text-sm font-semibold tracking-tight text-white">
                 Rental Tracker
@@ -52,7 +59,7 @@ export function LandingPage({ fontVariable }: LandingPageProps) {
 
           <div className="flex flex-wrap gap-x-10 gap-y-6 text-sm">
             <div className="space-y-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-600">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
                 Product
               </p>
               <ul className="space-y-2 text-zinc-400">
@@ -74,7 +81,7 @@ export function LandingPage({ fontVariable }: LandingPageProps) {
               </ul>
             </div>
             <div className="space-y-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-600">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
                 Legal
               </p>
               <ul className="space-y-2 text-zinc-400">
@@ -93,7 +100,7 @@ export function LandingPage({ fontVariable }: LandingPageProps) {
           </div>
         </div>
 
-        <div className="border-t border-white/[0.04]">
+        <div className="border-t border-white/[0.06]">
           <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-4 py-5 text-xs text-zinc-600 sm:flex-row sm:px-6">
             <span>© {new Date().getFullYear()} Rental Tracker</span>
             <span>Built for house-hunters in Sri Lanka</span>

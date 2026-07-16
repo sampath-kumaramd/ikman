@@ -74,6 +74,8 @@ Then change “Run Now” to call that host (or keep GHA only for manual dispatc
 
 Examples: a $5 VPS, Railway/Render cron, a home always-on machine.
 
+**AWS EC2 (recommended path with free credits):** full launch checklist, network/security group settings, install steps, and cron — see **[EC2-SETUP.md](./EC2-SETUP.md)**.
+
 ## Check usage
 
 1. GitHub profile → **Settings → Billing → Plans and usage → Actions**
@@ -89,4 +91,4 @@ If the quota is empty, **dashboard Run Now and `/scrape` will also fail** (they 
 |------|----------------|
 | Lowest friction, open code OK | **Public repo** + 15 min cron |
 | Private free | Cron **`*/30`** or **`0 * * * *`** + Playwright cache |
-| Near real-time alerts | Small VPS + cron every 10–15 min (not Free private GHA) |
+| Near real-time alerts | Small VPS / **EC2** + cron every 10–15 min (not Free private GHA) — see [EC2-SETUP.md](./EC2-SETUP.md) |

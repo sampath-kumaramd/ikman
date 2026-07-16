@@ -219,15 +219,19 @@ function cleanStr(v: string | null | undefined): string | null {
   return stripLoneSurrogates(v)
 }
 
-export function sanitizeListingForDb(listing: Partial<Listing>): Partial<Listing> {
+export function sanitizeListingForDb(
+  listing: Partial<Listing> & { foundInAreas?: string[] },
+): Partial<Listing> {
+  // foundInAreas is scrape-run only — never a DB column
+  const { foundInAreas: _foundInAreas, ...rest } = listing
   return {
-    ...listing,
-    title:       cleanStr(listing.title)       ?? listing.title,
-    description: cleanStr(listing.description),
-    location:    cleanStr(listing.location)    ?? listing.location,
-    contact:     cleanStr(listing.contact),
-    photos:      listing.photos?.map((p) => stripLoneSurrogates(p)),
-    posted_at:   parsePostedAt(listing.posted_at ?? undefined),
+    ...rest,
+    title:       cleanStr(rest.title)       ?? rest.title,
+    description: cleanStr(rest.description),
+    location:    cleanStr(rest.location)    ?? rest.location,
+    contact:     cleanStr(rest.contact),
+    photos:      rest.photos?.map((p) => stripLoneSurrogates(p)),
+    posted_at:   parsePostedAt(rest.posted_at ?? undefined),
   }
 }
 
@@ -510,8 +514,12 @@ async function scrapeDetailPage(
   }
 }
 
-export async function runScraper(config: ScrapeConfig, browser: Browser): Promise<Partial<Listing>[]> {
-  const allListings: Partial<Listing>[] = []
+/** Listing from a scrape run, with every search area it appeared under. */
+export type ScrapedListing = Partial<Listing> & { foundInAreas: string[] }
+
+export async function runScraper(config: ScrapeConfig, browser: Browser): Promise<ScrapedListing[]> {
+  /** ikman_id → listing (merge foundInAreas when the same ad appears under multiple searches). */
+  const byId = new Map<string, ScrapedListing>()
   const pages = maxPages()
   const combos = config.areas.length * config.listing_types.length
   console.log(
@@ -559,11 +567,11 @@ export async function runScraper(config: ScrapeConfig, browser: Browser): Promis
             break
           }
 
-          const parsed: Partial<Listing>[] = []
+          let kept = 0
 
           for (const ad of ads) {
             const listing = parseAd(ad, area, categorySlug)
-            if (!listing) continue
+            if (!listing?.ikman_id) continue
 
             if (listing.price && listing.price > config.max_price) continue
             if (listing.bedrooms != null) {
@@ -571,11 +579,25 @@ export async function runScraper(config: ScrapeConfig, browser: Browser): Promis
               if (listing.bedrooms > config.max_bedrooms) continue
             }
 
-            parsed.push(listing)
+            const existing = byId.get(listing.ikman_id)
+            if (existing) {
+              if (!existing.foundInAreas.includes(area)) {
+                existing.foundInAreas.push(area)
+              }
+              // Prefer a pin location when the first sighting had none
+              if (!existing.location && listing.location) {
+                existing.location = listing.location
+              }
+            } else {
+              byId.set(listing.ikman_id, {
+                ...listing,
+                foundInAreas: [area],
+              })
+            }
+            kept++
           }
 
-          console.log(`  Kept ${parsed.length} of ${ads.length} listings after filtering`)
-          allListings.push(...parsed)
+          console.log(`  Kept ${kept} of ${ads.length} listings after filtering`)
         } catch (err) {
           console.error(`  Error: ${(err as Error).message}`)
           break
@@ -586,13 +608,6 @@ export async function runScraper(config: ScrapeConfig, browser: Browser): Promis
     }
   }
 
-  const seen = new Set<string>()
-  const unique = allListings.filter((l) => {
-    if (!l.ikman_id || seen.has(l.ikman_id)) return false
-    seen.add(l.ikman_id)
-    return true
-  })
-
   // Detail pages are fetched in index.ts for *new* listings only (saves time on repeat runs)
-  return unique
+  return [...byId.values()]
 }

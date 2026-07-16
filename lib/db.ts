@@ -1,5 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js'
 import type { PostgrestError } from '@supabase/supabase-js'
+import { locationAllowedForUser } from './match-listing'
 import type {
   Listing, ListingFilters, ListingType, Notification, ScrapeRun, SearchCriteria, UserSettings,
 } from './types'
@@ -182,10 +183,14 @@ export async function getListingsForUser(
   const { data, count, error } = await query
   if (error) throw dbError(error)
 
-  const listings = ((data ?? []) as Listing[]).map((l) => ({
-    ...l,
-    is_new: !viewed.has(l.id),
-  }))
+  // Drop ads whose pin is a different known place the user never selected
+  // (same rule as Telegram matching). Unknown neighborhoods still pass.
+  const listings = ((data ?? []) as Listing[])
+    .filter((l) => locationAllowedForUser(l.location, settings.areas))
+    .map((l) => ({
+      ...l,
+      is_new: !viewed.has(l.id),
+    }))
 
   return { listings, total: count ?? 0 }
 }

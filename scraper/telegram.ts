@@ -51,13 +51,14 @@ export function buildListingMessage(listing: Partial<Listing>): string {
     ? `Rs. ${listing.price.toLocaleString()}/mo`
     : 'Price on request'
   const type  = listing.listing_type ?? 'property'
-  const area  = listing.area ?? listing.location ?? ''
+  // Prefer the ad pin for the headline when present — it's what users recognize
+  const place = listing.location ?? listing.area ?? ''
   const beds  = listing.bedrooms ? `${listing.bedrooms} BR · ` : ''
 
   const lines: string[] = [
-    `🏠 <b>New ${type} for rent — ${area}</b>`,
+    `🏠 <b>New ${type} for rent — ${place}</b>`,
     `💰 ${price}`,
-    `📍 ${beds}${listing.location ?? area}`,
+    `📍 ${beds}${place}`,
   ]
 
   if (listing.description) {
