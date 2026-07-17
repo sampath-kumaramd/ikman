@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { SignIn } from '@clerk/nextjs'
+import { BrandLink } from '@/components/AppLogo'
 
 export const metadata: Metadata = { title: 'Sign in – Rental Tracker' }
 
@@ -12,12 +13,7 @@ export default function SignInPage() {
         className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_-10%,rgba(56,130,246,0.16),transparent_70%)]"
       />
       <header className="relative z-10 mx-auto flex h-16 w-full max-w-6xl items-center px-4 sm:px-6">
-        <Link href="/" className="flex items-center gap-2">
-          <span className="text-xl">🏠</span>
-          <span className="font-display text-lg font-bold tracking-tight text-white">
-            Rental Tracker
-          </span>
-        </Link>
+        <BrandLink href="/" size="lg" priority />
       </header>
       <main className="relative z-10 flex flex-1 items-center justify-center px-4 pb-16">
         <SignIn

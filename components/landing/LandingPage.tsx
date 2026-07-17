@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { AppLogo } from '@/components/AppLogo'
 import { cn } from '@/lib/utils'
 import { LandingNav } from './LandingNav'
 import { Hero } from './Hero'
@@ -44,9 +45,7 @@ export function LandingPage({ fontVariable }: LandingPageProps) {
         <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-12 sm:px-6 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-xs space-y-3">
             <div className="flex items-center gap-2.5">
-              <span className="text-xl" aria-hidden>
-                🏠
-              </span>
+              <AppLogo size="sm" />
               <span className="font-display text-sm font-semibold tracking-tight text-white">
                 Rental Tracker
               </span>

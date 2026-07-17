@@ -1,5 +1,6 @@
 'use client'
 
+import { AppLogo } from '@/components/AppLogo'
 import { AnimatedList } from '@/components/ui/animated-list'
 import { cn } from '@/lib/utils'
 
@@ -53,9 +54,7 @@ export function AlertsDemo() {
     <div className="relative mx-auto w-full max-w-md">
       <div className="glass relative overflow-hidden rounded-3xl p-4">
         <div className="mb-3 flex items-center gap-3 border-b border-white/10 pb-3">
-          <div className="glass-subtle flex size-9 items-center justify-center rounded-full text-xs font-bold text-sky-300">
-            RT
-          </div>
+          <AppLogo size={36} className="rounded-full ring-white/15" />
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold text-white">Rental Tracker</p>
             <p className="text-[11px] text-zinc-400">Telegram · matches only</p>

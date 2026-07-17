@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Settings } from 'lucide-react'
+import { BrandLink } from '@/components/AppLogo'
 import { FeedbackDialog } from '@/components/FeedbackDialog'
 import { NotificationBell } from '@/components/NotificationBell'
 import { UserMenu } from '@/components/UserMenu'
@@ -30,12 +31,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
       <header className="sticky top-0 z-40 border-b border-white/[0.08] bg-white/[0.03] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl backdrop-saturate-150">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4">
-          <Link href="/dashboard" className="flex min-w-0 shrink items-center gap-2">
-            <span className="text-xl shrink-0">🏠</span>
-            <span className="font-display truncate font-bold tracking-tight text-white max-[360px]:hidden sm:inline">
-              Rental Tracker
-            </span>
-          </Link>
+          <BrandLink
+            href="/dashboard"
+            size="sm"
+            priority
+            labelClassName="max-[360px]:hidden sm:inline"
+          />
 
           <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
             <FeedbackDialog />

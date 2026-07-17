@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'motion/react'
 import { ArrowLeft, ArrowRight, Check, Loader2, Send } from 'lucide-react'
 import { CriteriaForm } from '@/components/CriteriaForm'
+import { AppLogo } from '@/components/AppLogo'
 import { TelegramConnect } from '@/components/TelegramConnect'
 import { track } from '@/lib/analytics'
 import { cn } from '@/lib/utils'
@@ -99,7 +100,9 @@ export function OnboardingWizard({ telegramConnected }: { telegramConnected: boo
     <div className="space-y-8">
       {/* Header */}
       <div className="space-y-3 text-center">
-        <div className="text-4xl">🏠</div>
+        <div className="flex justify-center">
+          <AppLogo size={56} priority className="shadow-lg shadow-sky-500/20" />
+        </div>
         <h1 className="font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">
           Let&apos;s set up your tracker
         </h1>

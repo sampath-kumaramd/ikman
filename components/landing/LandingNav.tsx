@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { SignInButton, SignUpButton, Show, UserButton } from '@clerk/nextjs'
+import { BrandLink } from '@/components/AppLogo'
 
 const NAV_LINKS = [
   { href: '#how-it-works', label: 'How it works' },
@@ -14,14 +15,7 @@ export function LandingNav() {
     <header className="sticky top-0 z-50 border-b border-white/[0.08] bg-white/[0.03] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl backdrop-saturate-150">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:h-16 sm:px-6">
         <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="text-xl" aria-hidden>
-              🏠
-            </span>
-            <span className="font-display text-[15px] font-bold tracking-tight text-white sm:text-base">
-              Rental Tracker
-            </span>
-          </Link>
+          <BrandLink href="/" size="md" priority />
 
           <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">
             {NAV_LINKS.map((link) => (

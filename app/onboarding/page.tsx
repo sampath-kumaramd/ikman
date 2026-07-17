@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
 import { Bricolage_Grotesque } from 'next/font/google'
+import { BrandLink } from '@/components/AppLogo'
 import { OnboardingWizard } from '@/components/OnboardingWizard'
 import { getAuthUser } from '@/lib/auth'
 import { getAdminClient } from '@/lib/supabase'
@@ -39,12 +39,7 @@ export default async function OnboardingPage() {
       />
 
       <header className="relative z-10 mx-auto flex h-16 w-full max-w-6xl items-center px-4 sm:px-6">
-        <Link href="/" className="flex items-center gap-2">
-          <span className="text-xl">🏠</span>
-          <span className="font-display text-lg font-bold tracking-tight text-white">
-            Rental Tracker
-          </span>
-        </Link>
+        <BrandLink href="/" size="lg" priority />
       </header>
 
       <main className="relative z-10 mx-auto w-full max-w-2xl px-4 pb-20 pt-4 sm:px-6">

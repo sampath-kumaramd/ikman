@@ -36,7 +36,11 @@ export const metadata: Metadata = {
   description,
   applicationName: title,
   icons: {
-    icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
+    icon: [
+      { url: '/logo.jpg', type: 'image/jpeg', sizes: '960x960' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+    apple: [{ url: '/logo.jpg', type: 'image/jpeg', sizes: '960x960' }],
   },
   openGraph: {
     type: 'website',
@@ -44,13 +48,13 @@ export const metadata: Metadata = {
     siteName: title,
     title: `${title} — Never miss a boarding place`,
     description,
-    images: [{ url: '/og.svg', width: 1200, height: 630, alt: title }],
+    images: [{ url: '/logo.jpg', width: 960, height: 960, alt: title }],
   },
   twitter: {
-    card: 'summary_large_image',
+    card: 'summary',
     title: `${title} — Never miss a boarding place`,
     description,
-    images: ['/og.svg'],
+    images: ['/logo.jpg'],
   },
 }
 
