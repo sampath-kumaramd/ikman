@@ -63,7 +63,9 @@ CREATE TABLE IF NOT EXISTS notifications (
   listing_id     UUID        REFERENCES listings(id) ON DELETE CASCADE,
   whatsapp_sent  BOOLEAN     DEFAULT FALSE,  -- legacy name: true when the Telegram alert was sent
   read           BOOLEAN     DEFAULT FALSE,
-  created_at     TIMESTAMPTZ DEFAULT NOW()
+  created_at     TIMESTAMPTZ DEFAULT NOW(),
+  -- One alert per user per listing (prevents Telegram spam on re-scrape)
+  UNIQUE (user_id, listing_id)
 );
 
 CREATE INDEX IF NOT EXISTS notifications_user_read_idx ON notifications (user_id, read);

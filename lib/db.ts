@@ -207,10 +207,53 @@ export async function upsertListings(
   return (data ?? []) as Listing[]
 }
 
+/**
+ * Which of the given ikman_ids already exist in the DB.
+ *
+ * Prefer this over loading every listing: Supabase/PostgREST caps rows
+ * (~1000 by default), so a full-table select silently misses older ads and
+ * the scraper re-alerts them every run.
+ */
+export async function getExistingIkmanIdsAmong(
+  client: SupabaseClient,
+  candidateIds: string[],
+): Promise<Set<string>> {
+  const existing = new Set<string>()
+  if (!candidateIds.length) return existing
+
+  // .in() URL size limit — keep batches modest
+  const chunkSize = 200
+  for (let i = 0; i < candidateIds.length; i += chunkSize) {
+    const chunk = candidateIds.slice(i, i + chunkSize)
+    const { data, error } = await client
+      .from('listings')
+      .select('ikman_id')
+      .in('ikman_id', chunk)
+    if (error) throw dbError(error)
+    for (const row of data ?? []) {
+      existing.add((row as { ikman_id: string }).ikman_id)
+    }
+  }
+  return existing
+}
+
+/** @deprecated Prefer getExistingIkmanIdsAmong — full table scan hits the row cap. */
 export async function getExistingIkmanIds(client: SupabaseClient): Promise<Set<string>> {
-  const { data, error } = await client.from('listings').select('ikman_id')
-  if (error) throw dbError(error)
-  return new Set((data ?? []).map((r: { ikman_id: string }) => r.ikman_id))
+  const ids = new Set<string>()
+  const pageSize = 1000
+  let from = 0
+  for (;;) {
+    const { data, error } = await client
+      .from('listings')
+      .select('ikman_id')
+      .range(from, from + pageSize - 1)
+    if (error) throw dbError(error)
+    const rows = (data ?? []) as { ikman_id: string }[]
+    for (const r of rows) ids.add(r.ikman_id)
+    if (rows.length < pageSize) break
+    from += pageSize
+  }
+  return ids
 }
 
 // ── Per-user viewed state ─────────────────────────────────────────────────────
@@ -276,18 +319,47 @@ export async function getNotifications(
   return (data ?? []) as Notification[]
 }
 
+/** True if this user was already alerted about this listing (any prior scrape). */
+export async function hasNotificationForListing(
+  client: SupabaseClient,
+  userId: string,
+  listingId: string,
+): Promise<boolean> {
+  const { data, error } = await client
+    .from('notifications')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('listing_id', listingId)
+    .maybeSingle()
+  if (error) throw dbError(error)
+  return !!data
+}
+
+/**
+ * Insert a notification for (user, listing). No-op if one already exists
+ * (unique constraint or race). Returns whether a new row was created.
+ */
 export async function createNotification(
   client: SupabaseClient,
   userId: string,
   listingId: string,
   telegramSent: boolean,
-): Promise<void> {
+): Promise<boolean> {
+  if (await hasNotificationForListing(client, userId, listingId)) {
+    return false
+  }
+
   const { error } = await client.from('notifications').insert({
     user_id: userId,
     listing_id: listingId,
     whatsapp_sent: telegramSent,
   })
-  if (error) throw dbError(error)
+  // 23505 = unique_violation — another worker won the race
+  if (error) {
+    if (error.code === '23505') return false
+    throw dbError(error)
+  }
+  return true
 }
 
 export async function markNotificationsRead(

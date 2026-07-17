@@ -4,7 +4,11 @@ import { runScraper, enrichListingsWithDetails, sanitizeListingForDb } from './s
 import type { ScrapedListing } from './scraper'
 import { sendTelegram, buildListingMessage } from './telegram'
 import {
-  getOnboardedUserSettings, upsertListings, getExistingIkmanIds, createNotification,
+  getOnboardedUserSettings,
+  upsertListings,
+  getExistingIkmanIdsAmong,
+  hasNotificationForListing,
+  createNotification,
 } from '../lib/db'
 import { matchesUser } from '../lib/match-listing'
 import { ScrapeProgress } from './progress'
@@ -44,11 +48,9 @@ async function main() {
     const minBedrooms   = Math.min(...users.map((u) => u.min_bedrooms))
     const maxBedrooms   = Math.max(...users.map((u) => u.max_bedrooms))
 
-    // ── Existing IDs ──────────────────────────────────────────────────────────
-    const existingIds = await getExistingIkmanIds(db)
     await progress.step(
       'Scanning ikman.lk…',
-      `${users.length} users · ${areas.length} area(s) × ${listingTypes.length} type(s) · ${existingIds.size} existing in DB`,
+      `${users.length} users · ${areas.length} area(s) × ${listingTypes.length} type(s)`,
     )
 
     // ── Scrape ────────────────────────────────────────────────────────────────
@@ -69,10 +71,16 @@ async function main() {
       )
 
       // ── New listings ────────────────────────────────────────────────────────
+      // Only ask the DB about IDs we just scraped (avoids PostgREST row cap on
+      // a full-table select, which re-treated known ads as "new" every run).
+      const scrapedIds = scraped
+        .map((l) => l.ikman_id)
+        .filter((id): id is string => !!id)
+      const existingIds = await getExistingIkmanIdsAmong(db, scrapedIds)
       const newListings = scraped.filter((l) => l.ikman_id && !existingIds.has(l.ikman_id))
       await progress.step(
         newListings.length ? 'Found new listings…' : 'Checking for new listings…',
-        `${newListings.length} new listing(s) to save`,
+        `${newListings.length} new listing(s) to save (${existingIds.size} already known)`,
       )
 
       if (!newListings.length) {
@@ -161,6 +169,11 @@ async function main() {
           !!telegramToken && user.notifications_enabled && !!user.telegram_chat_id
 
         for (const listing of matches) {
+          // Never re-alert the same listing to the same user
+          if (await hasNotificationForListing(db, user.user_id, listing.id)) {
+            continue
+          }
+
           let notified = false
           if (canNotify) {
             const msg = buildListingMessage(listing)
